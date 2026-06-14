@@ -57,7 +57,7 @@ export default function Dashboard({ userProfile, onLogout }: DashboardProps) {
       case 'bodymap': return <BodyMap />;
       case 'agents': return <AgentSwarm />;
       case 'reports': return <ReportAnalyzer />;
-      case 'scanner': return <MedicineScanner />;
+      case 'scanner': return <MedicineScanner userProfile={userProfile} />;
       case 'safety': return <SafetyCenter />;
       case 'family': return <FamilyHealth />;
       case 'assistant': return <Assistant userProfile={userProfile} />;

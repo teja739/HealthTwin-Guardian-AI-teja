@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Camera, Shield, AlertTriangle, CheckCircle, 
@@ -8,9 +8,23 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export default function MedicineScanner() {
+interface MedicineScannerProps {
+  userProfile?: {
+    name: string;
+    email: string;
+    bloodGroup: string;
+    allergies: string[];
+    medications: string[];
+    conditions: string[];
+    onboardingComplete: boolean;
+  };
+}
+
+export default function MedicineScanner({ userProfile }: MedicineScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [scannedMed, setScannedMed] = useState<any>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sampleMeds = [
     {
@@ -24,7 +38,8 @@ export default function MedicineScanner() {
       prescriptionRequired: true,
       safetyScore: 92,
       manufacturer: 'Merck & Co.',
-      form: 'Oral Tablet'
+      form: 'Oral Tablet',
+      profileConflicts: []
     },
     {
       name: 'Metformin 500mg',
@@ -37,17 +52,82 @@ export default function MedicineScanner() {
       prescriptionRequired: true,
       safetyScore: 88,
       manufacturer: 'Bristol-Myers Squibb',
-      form: 'Oral Tablet'
+      form: 'Oral Tablet',
+      profileConflicts: []
     }
   ];
 
-  const triggerScan = (idx: number) => {
+  const triggerMockScan = (idx: number) => {
     setIsScanning(true);
     setScannedMed(null);
+    setErrorMsg(null);
     setTimeout(() => {
-      setScannedMed(sampleMeds[idx]);
+      // Simulate checking conflicts based on current profile details
+      const med = { ...sampleMeds[idx] };
+      const conflicts = [];
+      if (userProfile) {
+        if (med.generic.toLowerCase() === 'lisinopril') {
+          // If taking Metoprolol or other meds, check
+          if (userProfile.medications.some(m => m.toLowerCase().includes('aspirin'))) {
+            conflicts.push({
+              severity: 'Medium',
+              description: 'Aspirin may slightly decrease the blood pressure lowering effect of Lisinopril.'
+            });
+          }
+        }
+      }
+      med.profileConflicts = conflicts as any;
+      setScannedMed(med);
       setIsScanning(false);
-    }, 2200);
+    }, 1500);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScanning(true);
+    setScannedMed(null);
+    setErrorMsg(null);
+
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64 = reader.result as string;
+
+        const response = await fetch('/api/scan', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            image: base64,
+            mimeType: file.type,
+            userProfile,
+          }),
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to scan medicine');
+        }
+
+        const data = await response.json();
+        setScannedMed(data);
+        setIsScanning(false);
+      };
+      
+      reader.onerror = () => {
+        throw new Error('Failed to read image file');
+      };
+
+      reader.readAsDataURL(file);
+
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'An error occurred while scanning the medicine package.');
+      setIsScanning(false);
+    }
   };
 
   return (
@@ -59,21 +139,28 @@ export default function MedicineScanner() {
           <p className="text-xs text-slate-400 mt-1">Upload or capture a medicine image for instant AI identification</p>
 
           <div
-            onClick={() => triggerScan(0)}
+            onClick={() => fileInputRef.current?.click()}
             className="mt-5 border-2 border-dashed border-white/10 bg-white/2 rounded-xl flex flex-col items-center justify-center p-10 cursor-pointer hover:border-medical-blue/30 transition duration-300"
           >
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileUpload} 
+              accept="image/*" 
+              className="hidden" 
+            />
             <Camera className="w-10 h-10 text-medical-blue mb-3" />
-            <p className="text-xs font-semibold text-white">Tap to capture or upload image</p>
-            <p className="text-[10px] text-slate-500 mt-1">Supports JPG, PNG, HEIC</p>
+            <p className="text-xs font-semibold text-white font-display">Tap to capture or upload image</p>
+            <p className="text-[10px] text-slate-500 mt-1 font-mono">Supports JPG, PNG, HEIC</p>
           </div>
         </div>
 
         <div className="glass-panel p-6 rounded-2xl space-y-4">
-          <h4 className="text-sm font-display font-bold text-slate-300 uppercase tracking-wider">Quick Demo Scans</h4>
+          <h4 className="text-xs font-display font-bold text-slate-400 uppercase tracking-widest">Quick Demo Scans</h4>
           {sampleMeds.map((med, idx) => (
             <button
               key={idx}
-              onClick={() => triggerScan(idx)}
+              onClick={() => triggerMockScan(idx)}
               disabled={isScanning}
               className="w-full text-left p-3.5 rounded-xl border border-white/5 flex items-center gap-3 text-xs transition duration-200 glass-panel-hover"
             >
@@ -101,7 +188,23 @@ export default function MedicineScanner() {
           </motion.div>
         )}
 
-        {!isScanning && !scannedMed && (
+        {errorMsg && (
+          <div className="glass-panel p-6 rounded-2xl h-full flex flex-col items-center justify-center text-center space-y-4 border-rose-500/25 bg-rose-950/5">
+            <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-500"><AlertTriangle className="w-8 h-8" /></div>
+            <div>
+              <h4 className="font-display font-bold text-white text-sm">Scan Failed</h4>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">{errorMsg}</p>
+            </div>
+            <button 
+              onClick={() => setErrorMsg(null)}
+              className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-semibold text-white hover:bg-white/10 transition"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {!isScanning && !errorMsg && !scannedMed && (
           <div className="glass-panel p-6 rounded-2xl h-full flex flex-col items-center justify-center text-center space-y-3">
             <div className="p-4 bg-white/3 border border-white/5 rounded-2xl text-slate-500"><Camera className="w-8 h-8" /></div>
             <div>
@@ -111,8 +214,25 @@ export default function MedicineScanner() {
           </div>
         )}
 
-        {!isScanning && scannedMed && (
+        {!isScanning && !errorMsg && scannedMed && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel p-6 rounded-2xl space-y-5">
+            {/* Critical Conflicts Banner */}
+            {scannedMed.profileConflicts && scannedMed.profileConflicts.length > 0 && (
+              <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-rose-400 font-bold text-xs">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span className="font-display tracking-wider uppercase">Critical Profile Conflict Detected</span>
+                </div>
+                <div className="space-y-1.5 pl-6">
+                  {scannedMed.profileConflicts.map((conflict: any, i: number) => (
+                    <p key={i} className="text-xs text-rose-300 leading-relaxed list-item">
+                      <strong>[{conflict.severity} Risk]:</strong> {conflict.description}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/5 pb-4">
               <div>
@@ -121,8 +241,12 @@ export default function MedicineScanner() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="text-center">
-                  <div className="text-2xl font-display font-extrabold text-medical-teal">{scannedMed.safetyScore}</div>
-                  <div className="text-[9px] text-slate-500 uppercase tracking-wider">Safety</div>
+                  <div className={cn(
+                    "text-2xl font-display font-extrabold",
+                    scannedMed.safetyScore >= 80 ? "text-medical-teal" :
+                    scannedMed.safetyScore >= 60 ? "text-amber-400" : "text-rose-500"
+                  )}>{scannedMed.safetyScore}</div>
+                  <div className="text-[9px] text-slate-500 uppercase tracking-wider">Safety Score</div>
                 </div>
               </div>
             </div>
