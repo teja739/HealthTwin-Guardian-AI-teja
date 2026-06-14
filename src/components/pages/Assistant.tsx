@@ -53,7 +53,8 @@ export default function Assistant({ userProfile }: AssistantProps) {
 
   const [isListening, setIsListening] = useState(false);
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -61,61 +62,88 @@ export default function Assistant({ userProfile }: AssistantProps) {
   }, [messages]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        recognition.onstart = () => {
-          setIsListening(true);
-        };
-
-        recognition.onend = () => {
-          setIsListening(false);
-        };
-
-        recognition.onerror = (event: any) => {
-          console.error('Speech recognition error', event.error);
-          setIsListening(false);
-        };
-
-        recognition.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          setInput(prev => prev + (prev ? ' ' : '') + transcript);
-        };
-
-        recognitionRef.current = recognition;
-      }
-    }
-
     return () => {
       if (typeof window !== 'undefined') {
         window.speechSynthesis.cancel();
       }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
     };
   }, []);
 
-  const toggleListening = () => {
-    if (!recognitionRef.current) {
-      alert("Speech recognition is not supported in this browser. Please try Google Chrome or Microsoft Edge.");
-      return;
-    }
+  const startRecording = async () => {
+    if (typeof window === 'undefined') return;
 
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        
+        // Stop all microphone tracks to release the hardware indicator
+        stream.getTracks().forEach(track => track.stop());
+
+        setIsListening(false);
+        setIsTyping(true); // Show typing animation while transcribing via Groq Whisper
+
+        try {
+          const currentLang = languages.find(l => l.name === selectedLang);
+          const langCode = currentLang ? currentLang.code : 'en';
+
+          const formData = new FormData();
+          formData.append('file', audioBlob, 'voice.webm');
+          formData.append('language', langCode);
+
+          const response = await fetch('/api/stt', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error('Transcription request failed');
+          }
+
+          const data = await response.json();
+          if (data.text) {
+            setInput(prev => prev + (prev ? ' ' : '') + data.text);
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Could not transcribe audio. Please check your Groq API key configuration.');
+        } finally {
+          setIsTyping(false);
+        }
+      };
+
+      mediaRecorder.start();
+      setIsListening(true);
+    } catch (err) {
+      console.error('Microphone access error:', err);
+      alert('Could not access microphone. Please check browser permissions.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+  const toggleListening = () => {
     if (isListening) {
-      recognitionRef.current.stop();
+      stopRecording();
     } else {
-      const currentLang = languages.find(l => l.name === selectedLang);
-      recognitionRef.current.lang = currentLang ? currentLang.code === 'hi' ? 'hi-IN' : 
-                                     currentLang.code === 'te' ? 'te-IN' : 
-                                     currentLang.code === 'ta' ? 'ta-IN' :
-                                     currentLang.code === 'kn' ? 'kn-IN' :
-                                     currentLang.code === 'mr' ? 'mr-IN' :
-                                     currentLang.code === 'bn' ? 'bn-IN' :
-                                     currentLang.code === 'es' ? 'es-ES' :
-                                     currentLang.code === 'ar' ? 'ar-SA' : 'en-US' : 'en-US';
-      recognitionRef.current.start();
+      startRecording();
     }
   };
 
