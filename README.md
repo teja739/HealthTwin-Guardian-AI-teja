@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🛡️ HealthTwin Guardian AI
 
-## Getting Started
+### *Your Proactive Digital Health Shield*
 
-First, run the development server:
+HealthTwin Guardian AI is a state-of-the-art, personalized AI digital health twin designed to continuously monitor, advise, and protect patients. It addresses two of the most critical challenges in modern healthcare: **accidental drug/allergy conflicts** and **complex medical language barriers**.
 
+---
+
+## 🚀 Key Features
+
+### 1. 💬 Profile-Aware AI Assistant
+* **Contextual Healthcare**: The assistant is fully aware of the user's active health profile (including current medications, existing conditions, and allergies).
+* **Proactive Warning Engine**: If a user asks a question about a symptom or medication that could conflict with their profile, the assistant flags it immediately.
+* **Flexible API Routing**: Secure backend router supporting **Google Gemini**, **Groq Llama 3.3**, and **OpenRouter** APIs.
+
+### 2. 📸 Live AI Medicine Image Scanner (Gemini Vision)
+* **Real-time OCR & Analysis**: Upload or capture a photo of any medicine bottle or packaging.
+* **Ingredient & Dosage Extraction**: Extracts active ingredients, drug class, standard dosage, and side effects.
+* **Automatic Conflict Detection**: Automatically cross-references scanned ingredients against your allergies and medications, rendering a red/amber **"CRITICAL PROFILE CONFLICT DETECTED"** warning banner in the UI.
+
+### 3. 🌐 Multilingual Translation & Speech Input/Output
+* **9 Languages Supported**: Full support for English, Hindi, Telugu, Tamil, Kannada, Marathi, Bengali, Spanish, and Arabic.
+* **Voice Input (Speech-to-Text)**: High-speed transcription using **Groq Whisper API (`whisper-large-v3-turbo`)** directly through browser recording.
+* **Premium Voice Output (Text-to-Speech)**: Converts AI responses and regional translations into ultra-realistic human voices using **OpenAI's TTS API (`tts-1` with the `shimmer` voice)**.
+
+---
+
+## 🛠️ Tech Stack
+
+* **Frontend**: Next.js 16 (App Router), TailwindCSS, Framer Motion (premium glassmorphic micro-animations).
+* **Authentication**: Clerk Authentication (Secure sign-in/up and profile setup).
+* **AI Core**:
+  * **Image Processing & Vision**: Google Gemini 2.5 Flash API
+  * **Text Synthesis & Translation**: Google Gemini 2.5 Flash / Groq Llama 3.3
+  * **Voice Transcription (STT)**: Groq Whisper API
+  * **Premium Vocal Synthesis (TTS)**: OpenAI TTS API
+
+---
+
+## ⚙️ Setup & Installation
+
+### 1. Clone & Navigate
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/teja739/HealthTwin-Guardian-AI-teja.git
+cd HealthTwin-Guardian-AI-teja
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install Dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Environment Configuration
+Create a `.env.local` file at the root of the project:
+```env
+# Google Gemini API Key
+GEMINI_API_KEY=your_gemini_api_key
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# OpenAI API Key (For TTS Audio)
+OPENAI_API_KEY=your_openai_api_key
 
-## Learn More
+# Groq API Key (For Whisper Speech-to-Text)
+GROQ_API_KEY=your_groq_api_key
 
-To learn more about Next.js, take a look at the following resources:
+# Clerk Authentication Keys
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+CLERK_SECRET_KEY=your_clerk_secret_key
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. Start the Application
+```bash
+npm run dev
+```
+Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🔮 Future Roadmap
+* **Smart Wearable Syncing**: Sync active vitals (Heart Rate, HRV, Glucose) directly into the Digital Twin.
+* **Clinic Portal**: Enable healthcare providers to push prescriptions directly to patients' HealthTwin accounts.
+* **Offline Emergency SOS**: Local on-device models to diagnose symptoms and locate nearest hospitals when network access is unavailable.
