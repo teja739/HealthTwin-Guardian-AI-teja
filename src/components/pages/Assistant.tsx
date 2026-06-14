@@ -13,7 +13,19 @@ interface Message {
   translation?: string;
 }
 
-export default function Assistant() {
+interface AssistantProps {
+  userProfile?: {
+    name: string;
+    email: string;
+    bloodGroup: string;
+    allergies: string[];
+    medications: string[];
+    conditions: string[];
+    onboardingComplete: boolean;
+  };
+}
+
+export default function Assistant({ userProfile }: AssistantProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -31,51 +43,66 @@ export default function Assistant() {
     { name: 'English', code: 'en', flag: '🇺🇸' },
     { name: 'Hindi', code: 'hi', flag: '🇮🇳' },
     { name: 'Telugu', code: 'te', flag: '🇮🇳' },
+    { name: 'Tamil', code: 'ta', flag: '🇮🇳' },
+    { name: 'Kannada', code: 'kn', flag: '🇮🇳' },
+    { name: 'Marathi', code: 'mr', flag: '🇮🇳' },
+    { name: 'Bengali', code: 'bn', flag: '🇮🇳' },
     { name: 'Spanish', code: 'es', flag: '🇪🇸' },
     { name: 'Arabic', code: 'ar', flag: '🇸🇦' }
   ];
-
-  const aiResponses: Record<string, { content: string; translation?: string }> = {
-    'health': {
-      content: 'Based on your latest health data, your overall Health Score is 88/100. Your cardiovascular metrics are excellent with a resting heart rate of 64 bpm and HRV of 76ms. Your fasting glucose is slightly elevated at 104 mg/dL — I recommend focusing on post-meal walks.',
-      translation: selectedLang === 'Hindi' ? 'आपके नवीनतम स्वास्थ्य डेटा के आधार पर, आपका समग्र स्वास्थ्य स्कोर 88/100 है।' :
-                   selectedLang === 'Telugu' ? 'మీ తాజా ఆరోగ్య డేటా ఆధారంగా, మీ మొత్తం ఆరోగ్య స్కోరు 88/100.' :
-                   selectedLang === 'Spanish' ? 'Según sus últimos datos de salud, su puntuación de salud general es 88/100.' :
-                   selectedLang === 'Arabic' ? 'بناءً على أحدث بياناتك الصحية، فإن درجة صحتك العامة هي 88/100.' : undefined
-    },
-    'default': {
-      content: 'I understand your question. Based on your health profile and the latest medical data from your HealthTwin, everything looks within normal parameters. Your AI agents are continuously monitoring your vitals, medications, and risk factors. Is there anything specific you\'d like me to explain in more detail?',
-      translation: selectedLang === 'Hindi' ? 'मैं आपके प्रश्न को समझता हूँ। आपकी स्वास्थ्य प्रोफ़ाइल के आधार पर सब कुछ सामान्य सीमा में है।' :
-                   selectedLang === 'Telugu' ? 'నేను మీ ప్రశ్నను అర్థం చేసుకున్నాను. మీ ఆరోగ్య ప్రొఫైల్ ఆధారంగా అంతా సాధారణ పరిధిలో ఉంది.' :
-                   selectedLang === 'Spanish' ? 'Entiendo su pregunta. Según su perfil de salud, todo se encuentra dentro de los parámetros normales.' :
-                   selectedLang === 'Arabic' ? 'أنا أفهم سؤالك. بناءً على ملفك الصحي، كل شيء ضمن المعايير الطبيعية.' : undefined
-    }
-  };
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
+  const sendMessage = async () => {
+    if (!input.trim() || isTyping) return;
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: input, lang: selectedLang };
-    setMessages(prev => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const key = input.toLowerCase().includes('health') || input.toLowerCase().includes('score') ? 'health' : 'default';
-      const resp = aiResponses[key];
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
+          language: selectedLang,
+          userProfile
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await response.json();
+      
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: resp.content,
+        content: data.content,
         lang: 'English',
-        translation: selectedLang !== 'English' ? resp.translation : undefined
+        translation: selectedLang !== 'English' && data.translation ? data.translation : undefined
+      };
+      
+      setMessages(prev => [...prev, assistantMsg]);
+    } catch (error) {
+      console.error(error);
+      const assistantMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Error: Could not connect to the AI Assistant service. Please check your API key configuration in your environment variables.',
+        lang: 'English'
       };
       setMessages(prev => [...prev, assistantMsg]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -140,7 +167,7 @@ export default function Assistant() {
                   : 'bg-white/5 border border-white/5 text-slate-300 rounded-bl-sm'
               )}>
                 <p>{msg.content}</p>
-                {msg.translation && (
+                {msg.translation && msg.translation !== 'null' && msg.translation !== 'undefined' && selectedLang !== 'English' && (
                   <div className="mt-2.5 pt-2.5 border-t border-white/10">
                     <span className="text-[9px] text-medical-teal font-mono uppercase tracking-wider">Translation ({selectedLang})</span>
                     <p className="text-slate-400 mt-1">{msg.translation}</p>

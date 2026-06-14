@@ -60,7 +60,7 @@ export default function Dashboard({ userProfile, onLogout }: DashboardProps) {
       case 'scanner': return <MedicineScanner />;
       case 'safety': return <SafetyCenter />;
       case 'family': return <FamilyHealth />;
-      case 'assistant': return <Assistant />;
+      case 'assistant': return <Assistant userProfile={userProfile} />;
       case 'emergency': return <EmergencyMode userProfile={userProfile} />;
       default: return <Home userProfile={userProfile} />;
     }
