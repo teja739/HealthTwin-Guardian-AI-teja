@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Globe, Mic, Volume2, Send, Bot, User, Sparkles } from 'lucide-react';
+import { Globe, Mic, Volume2, Send, Bot, User, Sparkles, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Message {
@@ -51,9 +51,138 @@ export default function Assistant({ userProfile }: AssistantProps) {
     { name: 'Arabic', code: 'ar', flag: '🇸🇦' }
   ];
 
+  const [isListening, setIsListening] = useState(false);
+  const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const activeAudioRef = useRef<HTMLAudioElement | null>(null);
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+          setIsListening(true);
+        };
+
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error', event.error);
+          setIsListening(false);
+        };
+
+        recognition.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          setInput(prev => prev + (prev ? ' ' : '') + transcript);
+        };
+
+        recognitionRef.current = recognition;
+      }
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert("Speech recognition is not supported in this browser. Please try Google Chrome or Microsoft Edge.");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      const currentLang = languages.find(l => l.name === selectedLang);
+      recognitionRef.current.lang = currentLang ? currentLang.code === 'hi' ? 'hi-IN' : 
+                                     currentLang.code === 'te' ? 'te-IN' : 
+                                     currentLang.code === 'ta' ? 'ta-IN' :
+                                     currentLang.code === 'kn' ? 'kn-IN' :
+                                     currentLang.code === 'mr' ? 'mr-IN' :
+                                     currentLang.code === 'bn' ? 'bn-IN' :
+                                     currentLang.code === 'es' ? 'es-ES' :
+                                     currentLang.code === 'ar' ? 'ar-SA' : 'en-US' : 'en-US';
+      recognitionRef.current.start();
+    }
+  };
+
+  const speakMessage = async (msgId: string, text: string, langName: string) => {
+    if (typeof window === 'undefined') return;
+
+    // If already speaking this message, pause and clear it
+    if (speakingMsgId === msgId) {
+      if (activeAudioRef.current) {
+        activeAudioRef.current.pause();
+        activeAudioRef.current = null;
+      }
+      setSpeakingMsgId(null);
+      return;
+    }
+
+    // Stop any active audio playback
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current = null;
+    }
+    setSpeakingMsgId(null);
+
+    try {
+      setIsTyping(true); // Show typing animation while fetching premium audio
+
+      // OpenAI voices: alloy, echo, fable, onyx, nova, shimmer
+      const voice = langName === 'Arabic' ? 'alloy' : 'shimmer';
+
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text, voice }),
+      });
+
+      if (!response.ok) {
+        throw new Error('OpenAI TTS request failed');
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      activeAudioRef.current = audio;
+      setSpeakingMsgId(msgId);
+      
+      audio.onended = () => {
+        setSpeakingMsgId(null);
+        activeAudioRef.current = null;
+      };
+
+      audio.onerror = () => {
+        setSpeakingMsgId(null);
+        activeAudioRef.current = null;
+      };
+
+      await audio.play();
+
+    } catch (error) {
+      console.error('TTS playback error:', error);
+      alert('Failed to synthesize speech. Please check your OpenAI API key configuration.');
+    } finally {
+      setIsTyping(false);
+    }
+  };
 
   const sendMessage = async () => {
     if (!input.trim() || isTyping) return;
@@ -161,12 +290,29 @@ export default function Assistant({ userProfile }: AssistantProps) {
           {messages.map((msg) => (
             <div key={msg.id} className={cn("flex", msg.role === 'user' ? 'justify-end' : 'justify-start')}>
               <div className={cn(
-                "max-w-[80%] p-3.5 rounded-2xl text-xs leading-relaxed",
+                "max-w-[80%] p-3.5 rounded-2xl text-xs leading-relaxed relative group",
                 msg.role === 'user'
                   ? 'bg-medical-blue/20 border border-medical-blue/30 text-white rounded-br-sm'
                   : 'bg-white/5 border border-white/5 text-slate-300 rounded-bl-sm'
               )}>
-                <p>{msg.content}</p>
+                <div className={cn(msg.role === 'assistant' && "pr-6")}>
+                  <p>{msg.content}</p>
+                </div>
+                
+                {msg.role === 'assistant' && (
+                  <button 
+                    onClick={() => speakMessage(msg.id, msg.translation && selectedLang !== 'English' ? msg.translation : msg.content, selectedLang)}
+                    className="absolute top-2 right-2 p-1 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition text-medical-teal opacity-40 hover:opacity-100 group-hover:opacity-100"
+                    title={speakingMsgId === msg.id ? "Stop Speaking" : "Read Aloud"}
+                  >
+                    {speakingMsgId === msg.id ? (
+                      <VolumeX className="w-3.5 h-3.5 text-rose-400" />
+                    ) : (
+                      <Volume2 className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                )}
+
                 {msg.translation && msg.translation !== 'null' && msg.translation !== 'undefined' && selectedLang !== 'English' && (
                   <div className="mt-2.5 pt-2.5 border-t border-white/10">
                     <span className="text-[9px] text-medical-teal font-mono uppercase tracking-wider">Translation ({selectedLang})</span>
@@ -191,7 +337,16 @@ export default function Assistant({ userProfile }: AssistantProps) {
         {/* Input Bar */}
         <div className="p-4 border-t border-white/5 bg-slate-950/60">
           <div className="flex items-center gap-2.5">
-            <button className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition text-medical-blue">
+            <button 
+              onClick={toggleListening}
+              className={cn(
+                "p-2.5 rounded-xl border transition",
+                isListening 
+                  ? "bg-rose-500/20 border-rose-500/30 text-rose-400 animate-pulse" 
+                  : "bg-white/5 border-white/10 hover:bg-white/10 text-medical-blue"
+              )}
+              title={isListening ? "Listening... Click to Stop" : "Speak to Input"}
+            >
               <Mic className="w-4 h-4" />
             </button>
             <input
