@@ -7,6 +7,7 @@ import {
   Heart, Pill, ShieldAlert, User, Clock, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logToSplunk } from '@/lib/splunk-client';
 
 interface EmergencyProps {
   userProfile: {
@@ -37,8 +38,31 @@ export default function EmergencyMode({ userProfile }: EmergencyProps) {
     }
     if (isActivated && countdown === 0 && !smsSent) {
       setSmsSent(true);
+      // Log emergency alert broadcast to Splunk HEC
+      logToSplunk('emergency_sos', {
+        action: 'emergency_alerts_broadcasted',
+        contactsCount: emergencyContacts.length,
+        contactsNotified: emergencyContacts.map(c => ({ name: c.name, role: c.role })),
+        bloodGroup: userProfile.bloodGroup,
+        allergies: userProfile.allergies,
+        medications: userProfile.medications
+      }, { severity: 'Critical' });
+
+      // Trigger backend SMS and Discord alerts
+      fetch('/api/emergency', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: userProfile.name,
+          bloodGroup: userProfile.bloodGroup,
+          allergies: userProfile.allergies,
+          medications: userProfile.medications,
+          conditions: userProfile.conditions || [],
+          contacts: emergencyContacts
+        })
+      }).catch(err => console.error('Failed to trigger backend emergency alert:', err));
     }
-  }, [isActivated, countdown, smsSent]);
+  }, [isActivated, countdown, smsSent, userProfile, emergencyContacts]);
 
   useEffect(() => {
     if (!isActivated) return;
@@ -48,16 +72,73 @@ export default function EmergencyMode({ userProfile }: EmergencyProps) {
     return () => clearInterval(interval);
   }, [isActivated]);
 
+  const handleDownloadCard = () => {
+    const cardContent = `====================================
+HEALTH TWIN - EMERGENCY HEALTH CARD
+====================================
+PATIENT NAME: ${userProfile.name}
+BLOOD GROUP: ${userProfile.bloodGroup}
+EMERGENCY ID: HTG-${Date.now().toString().slice(-6)}
+
+CRITICAL MEDICAL DATA:
+---------------------
+KNOWN ALLERGIES: ${userProfile.allergies.join(', ') || 'None reported'}
+ACTIVE MEDICATIONS: ${userProfile.medications.join(', ') || 'None reported'}
+EXISTING CONDITIONS: ${userProfile.conditions?.join(', ') || 'None reported'}
+
+EMERGENCY CONTACTS:
+------------------
+${emergencyContacts.map(c => `- ${c.name} (${c.role}): ${c.phone}`).join('\n')}
+
+====================================
+HIPAA COMPLIANT · ENCRYPTED TELEMETRY
+====================================`;
+
+    const blob = new Blob([cardContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${userProfile.name.replace(/\s+/g, '_')}_health_card.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleShareCard = () => {
+    const shareText = `Emergency Health Card for ${userProfile.name}:\nBlood Group: ${userProfile.bloodGroup}\nAllergies: ${userProfile.allergies.join(', ') || 'None'}\nConditions: ${userProfile.conditions?.join(', ') || 'None'}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: `${userProfile.name} - Emergency Health Card`,
+        text: shareText,
+        url: window.location.origin
+      }).catch(err => console.log('Error sharing:', err));
+    } else {
+      navigator.clipboard.writeText(shareText);
+      alert('Emergency details copied to clipboard!');
+    }
+  };
+
   const handleActivate = () => {
     setIsActivated(true);
     setCountdown(5);
     setSmsSent(false);
+    // Log emergency initiated to Splunk HEC
+    logToSplunk('emergency_sos', {
+      action: 'emergency_initiated',
+      countdownSeconds: 5
+    }, { severity: 'Warning' });
   };
 
   const handleDeactivate = () => {
     setIsActivated(false);
     setCountdown(5);
     setSmsSent(false);
+    // Log emergency deactivated to Splunk HEC
+    logToSplunk('emergency_sos', {
+      action: 'emergency_deactivated'
+    }, { severity: 'Success' });
   };
 
   return (
@@ -203,10 +284,18 @@ export default function EmergencyMode({ userProfile }: EmergencyProps) {
                   Emergency Health Card
                 </h3>
                 <div className="flex items-center gap-2">
-                  <button className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition text-medical-blue">
+                  <button 
+                    onClick={handleDownloadCard}
+                    className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition text-medical-blue"
+                    title="Download Health Card"
+                  >
                     <Download className="w-4 h-4" />
                   </button>
-                  <button className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition text-medical-teal">
+                  <button 
+                    onClick={handleShareCard}
+                    className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition text-medical-teal"
+                    title="Share Health Card"
+                  >
                     <Share2 className="w-4 h-4" />
                   </button>
                 </div>

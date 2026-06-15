@@ -7,6 +7,7 @@ import {
   Pill, Clock, Star, Upload, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logToSplunk } from '@/lib/splunk-client';
 
 interface MedicineScannerProps {
   userProfile?: {
@@ -64,7 +65,7 @@ export default function MedicineScanner({ userProfile }: MedicineScannerProps) {
     setTimeout(() => {
       // Simulate checking conflicts based on current profile details
       const med = { ...sampleMeds[idx] };
-      const conflicts = [];
+      const conflicts: any[] = [];
       if (userProfile) {
         if (med.generic.toLowerCase() === 'lisinopril') {
           // If taking Metoprolol or other meds, check
@@ -79,6 +80,21 @@ export default function MedicineScanner({ userProfile }: MedicineScannerProps) {
       med.profileConflicts = conflicts as any;
       setScannedMed(med);
       setIsScanning(false);
+
+      // Log mock scan to Splunk HEC
+      const severity = conflicts.length > 0 ? (conflicts.some(c => c.severity === 'High') ? 'High' : 'Warning') : 'Success';
+      logToSplunk('medicine_scan', {
+        action: 'medicine_scanned',
+        scanSource: 'demo_mock',
+        medicineName: med.name,
+        generic: med.generic,
+        category: med.category,
+        safetyScore: med.safetyScore,
+        manufacturer: med.manufacturer,
+        hasConflicts: conflicts.length > 0,
+        conflictsCount: conflicts.length,
+        conflictsDetails: conflicts
+      }, { severity });
     }, 1500);
   };
 
@@ -115,6 +131,22 @@ export default function MedicineScanner({ userProfile }: MedicineScannerProps) {
         const data = await response.json();
         setScannedMed(data);
         setIsScanning(false);
+
+        // Log live camera/upload scan to Splunk HEC
+        const conflicts = data.profileConflicts || [];
+        const severity = conflicts.length > 0 ? (conflicts.some((c: any) => c.severity === 'High') ? 'High' : 'Warning') : 'Success';
+        logToSplunk('medicine_scan', {
+          action: 'medicine_scanned',
+          scanSource: 'camera_upload',
+          medicineName: data.name,
+          generic: data.generic,
+          category: data.category,
+          safetyScore: data.safetyScore,
+          manufacturer: data.manufacturer,
+          hasConflicts: conflicts.length > 0,
+          conflictsCount: conflicts.length,
+          conflictsDetails: conflicts
+        }, { severity });
       };
       
       reader.onerror = () => {
@@ -127,6 +159,13 @@ export default function MedicineScanner({ userProfile }: MedicineScannerProps) {
       console.error(err);
       setErrorMsg(err.message || 'An error occurred while scanning the medicine package.');
       setIsScanning(false);
+
+      // Log scan failure to Splunk HEC
+      logToSplunk('medicine_scan', {
+        action: 'medicine_scan_failed',
+        scanSource: 'camera_upload',
+        error: err.message || String(err)
+      }, { severity: 'High' });
     }
   };
 

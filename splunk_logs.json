@@ -1,0 +1,124 @@
+[
+  {
+    "time": 1781518390913,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "security_access",
+    "index": "healthtwin",
+    "event": {
+      "action": "onboarding_completed",
+      "age": 32,
+      "weight": 72,
+      "height": 175,
+      "bloodGroup": "O+",
+      "goals": [
+        "Heart Health",
+        "Longevity"
+      ],
+      "allergiesCount": 1,
+      "medicationsCount": 6,
+      "conditionsCount": 1,
+      "userEmail": "teja.mercer@gmail.com",
+      "userName": "Teja Mercer",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-15T10:13:09.949Z",
+      "timestamp": "2026-06-15T10:13:10.913Z"
+    }
+  },
+  {
+    "time": 1781518490674,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "chat_interaction",
+    "index": "healthtwin",
+    "event": {
+      "action": "user_message_sent",
+      "contentLength": 87,
+      "language": "English",
+      "conversationLength": 2,
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Info",
+      "_client_timestamp": "2026-06-15T10:14:50.603Z",
+      "timestamp": "2026-06-15T10:14:50.674Z"
+    }
+  },
+  {
+    "time": 1781518501720,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "chat_interaction",
+    "index": "healthtwin",
+    "event": {
+      "action": "assistant_response_received",
+      "latencyMs": 11056,
+      "language": "English",
+      "hasTranslation": false,
+      "contentLength": 2218,
+      "status": "success",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-15T10:15:01.659Z",
+      "timestamp": "2026-06-15T10:15:01.720Z"
+    }
+  },
+  {
+    "time": 1781518527042,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "emergency_sos",
+    "index": "healthtwin",
+    "event": {
+      "action": "emergency_initiated",
+      "countdownSeconds": 5,
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Warning",
+      "_client_timestamp": "2026-06-15T10:15:26.977Z",
+      "timestamp": "2026-06-15T10:15:27.042Z"
+    }
+  },
+  {
+    "time": 1781518620638,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "emergency_sos",
+    "index": "healthtwin",
+    "event": {
+      "action": "emergency_alerts_broadcasted",
+      "contactsCount": 3,
+      "contactsNotified": [
+        {
+          "name": "Dr. Sarah Mitchell",
+          "role": "Primary Physician"
+        },
+        {
+          "name": "Priya (Spouse)",
+          "role": "Emergency Contact"
+        },
+        {
+          "name": "City Hospital ER",
+          "role": "Nearest Hospital"
+        }
+      ],
+      "bloodGroup": "O+",
+      "allergies": [
+        "Penicillin"
+      ],
+      "medications": [
+        "Lisinopril 10mg",
+        "Metoprolol 25mg",
+        "Atorvastatin 20mg",
+        "Metformin 500mg",
+        "Aspirin 81mg",
+        "Vitamin D3"
+      ],
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Critical",
+      "_client_timestamp": "2026-06-15T10:17:00.559Z",
+      "timestamp": "2026-06-15T10:17:00.638Z"
+    }
+  }
+]

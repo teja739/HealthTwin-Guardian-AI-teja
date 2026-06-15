@@ -8,6 +8,7 @@ import {
   Clock, Flame, RefreshCw, ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logToSplunk } from '@/lib/splunk-client';
 
 interface HomeProps {
   userProfile: {
@@ -24,6 +25,36 @@ interface HomeProps {
 export default function Home({ userProfile }: HomeProps) {
   const [hoveredMetric, setHoveredMetric] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<'7D' | '30D' | '12M'>('7D');
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleSyncVitals = async () => {
+    setIsSyncing(true);
+    
+    // Generate simulated biometric telemetry
+    const heartRate = Math.floor(Math.random() * (78 - 60) + 60);
+    const systolic = Math.floor(Math.random() * (124 - 115) + 115);
+    const diastolic = Math.floor(Math.random() * (80 - 70) + 70);
+    const glucose = Math.floor(Math.random() * (98 - 85) + 85);
+    const sleepEfficiency = Math.floor(Math.random() * (96 - 88) + 88);
+    const stressLevel = Math.floor(Math.random() * (35 - 15) + 15);
+    
+    // Log vitals telemetry to Splunk
+    await logToSplunk('biometric_telemetry', {
+      action: 'vitals_synchronized',
+      heartRate,
+      bloodPressure: `${systolic}/${diastolic}`,
+      systolic,
+      diastolic,
+      glucose,
+      sleepEfficiency,
+      stressLevel,
+      healthScore: 88
+    }, { severity: 'Success' });
+
+    setTimeout(() => {
+      setIsSyncing(false);
+    }, 1000);
+  };
 
   const stats = [
     {
@@ -138,9 +169,13 @@ export default function Home({ userProfile }: HomeProps) {
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             AI Guard: Active
           </div>
-          <button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-xs transition duration-200">
-            <RefreshCw className="w-3.5 h-3.5" />
-            Sync Vitals
+          <button 
+            onClick={handleSyncVitals}
+            disabled={isSyncing}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-xs transition duration-200 disabled:opacity-50"
+          >
+            <RefreshCw className={cn("w-3.5 h-3.5", isSyncing && "animate-spin")} />
+            {isSyncing ? 'Syncing...' : 'Sync Vitals'}
           </button>
         </div>
       </div>

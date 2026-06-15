@@ -7,6 +7,7 @@ import {
   Globe, AlertTriangle, Pill, Cpu, Play, Terminal
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logToSplunk } from '@/lib/splunk-client';
 
 interface AgentNode {
   id: string;
@@ -117,6 +118,15 @@ export default function AgentSwarm() {
       `[${agent.name.toUpperCase()}] -> Processing biometric telemetry buffers...`,
       `[${agent.name.toUpperCase()}] -> Biometric checksum validated. Status: ${agent.status}.`
     ]);
+
+    // Log agent diagnostic ping to Splunk HEC
+    logToSplunk('agent_diagnostics', {
+      action: 'agent_node_pinged',
+      nodeId: agent.id,
+      nodeName: agent.name,
+      nodeStatus: agent.status,
+      nodeActivity: agent.activity
+    }, { severity: agent.status === 'WARNING' ? 'Warning' : 'Info' });
 
     setTimeout(() => {
       setPulseTrigger(false);

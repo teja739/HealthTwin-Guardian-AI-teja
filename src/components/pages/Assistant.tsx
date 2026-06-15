@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Globe, Mic, Volume2, Send, Bot, User, Sparkles, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logToSplunk } from '@/lib/splunk-client';
 
 interface Message {
   id: string;
@@ -214,11 +215,22 @@ export default function Assistant({ userProfile }: AssistantProps) {
 
   const sendMessage = async () => {
     if (!input.trim() || isTyping) return;
-    const userMsg: Message = { id: Date.now().toString(), role: 'user', content: input, lang: selectedLang };
+    const queryText = input;
+    const userMsg: Message = { id: Date.now().toString(), role: 'user', content: queryText, lang: selectedLang };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInput('');
     setIsTyping(true);
+
+    const startTime = Date.now();
+
+    // Log user query to Splunk HEC
+    logToSplunk('chat_interaction', {
+      action: 'user_message_sent',
+      contentLength: queryText.length,
+      language: selectedLang,
+      conversationLength: updatedMessages.length
+    }, { severity: 'Info' });
 
     try {
       const response = await fetch('/api/chat', {
@@ -238,6 +250,7 @@ export default function Assistant({ userProfile }: AssistantProps) {
       }
 
       const data = await response.json();
+      const latencyMs = Date.now() - startTime;
       
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -247,9 +260,30 @@ export default function Assistant({ userProfile }: AssistantProps) {
         translation: selectedLang !== 'English' && data.translation ? data.translation : undefined
       };
       
+      // Log assistant response to Splunk HEC
+      logToSplunk('chat_interaction', {
+        action: 'assistant_response_received',
+        latencyMs,
+        language: selectedLang,
+        hasTranslation: !!assistantMsg.translation,
+        contentLength: data.content.length,
+        status: 'success'
+      }, { severity: 'Success' });
+
       setMessages(prev => [...prev, assistantMsg]);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      const latencyMs = Date.now() - startTime;
+      
+      // Log failure to Splunk HEC
+      logToSplunk('chat_interaction', {
+        action: 'assistant_response_received',
+        latencyMs,
+        language: selectedLang,
+        status: 'error',
+        error: error.message || String(error)
+      }, { severity: 'High' });
+
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',

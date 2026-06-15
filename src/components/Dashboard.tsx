@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Target, Activity, Brain, FileText,
   Scan, Shield, Users, Globe, AlertTriangle, LogOut,
-  ChevronLeft, ChevronRight, Menu, X
+  ChevronLeft, ChevronRight, Menu, X, Database
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { UserButton } from '@clerk/nextjs';
 
 import Home from './pages/Home';
 import MissionControl from './pages/MissionControl';
@@ -19,6 +20,7 @@ import SafetyCenter from './pages/SafetyCenter';
 import FamilyHealth from './pages/FamilyHealth';
 import Assistant from './pages/Assistant';
 import EmergencyMode from './pages/EmergencyMode';
+import SplunkDashboard from './pages/SplunkDashboard';
 
 interface DashboardProps {
   userProfile: {
@@ -48,6 +50,7 @@ export default function Dashboard({ userProfile, onLogout }: DashboardProps) {
     { id: 'safety', label: 'Safety Center', icon: Shield },
     { id: 'family', label: 'Family Health', icon: Users },
     { id: 'assistant', label: 'AI Assistant', icon: Globe },
+    { id: 'splunk', label: 'Splunk Observability', icon: Database },
   ];
 
   const renderPage = () => {
@@ -61,6 +64,7 @@ export default function Dashboard({ userProfile, onLogout }: DashboardProps) {
       case 'safety': return <SafetyCenter />;
       case 'family': return <FamilyHealth />;
       case 'assistant': return <Assistant userProfile={userProfile} />;
+      case 'splunk': return <SplunkDashboard />;
       case 'emergency': return <EmergencyMode userProfile={userProfile} />;
       default: return <Home userProfile={userProfile} />;
     }
@@ -145,8 +149,8 @@ export default function Dashboard({ userProfile, onLogout }: DashboardProps) {
             "flex items-center gap-3 px-3 py-3 rounded-xl bg-white/3 border border-white/5",
             sidebarCollapsed && 'justify-center px-1.5'
           )}>
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-medical-blue to-medical-teal flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-              {userProfile.name.charAt(0)}
+            <div className="shrink-0 flex items-center justify-center">
+              <UserButton appearance={{ elements: { avatarBox: "w-7 h-7" } }} />
             </div>
             {!sidebarCollapsed && (
               <div className="flex-1 min-w-0">

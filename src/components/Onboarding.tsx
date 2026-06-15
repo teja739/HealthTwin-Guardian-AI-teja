@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, ArrowRight, ArrowLeft, Check, Heart, Pill, AlertTriangle, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logToSplunk } from '@/lib/splunk-client';
 
 interface OnboardingProps {
   onComplete: (profile: any) => void;
@@ -34,12 +35,27 @@ export default function Onboarding({ onComplete, userName, userEmail }: Onboardi
   ];
 
   const handleComplete = () => {
-    onComplete({
+    const finalProfile = {
       name: userName,
       email: userEmail,
       ...profile,
       onboardingComplete: true
-    });
+    };
+
+    // Log profile completion to Splunk HEC
+    logToSplunk('security_access', {
+      action: 'onboarding_completed',
+      age: parseInt(profile.age) || 32,
+      weight: parseFloat(profile.weight) || 72,
+      height: parseFloat(profile.height) || 175,
+      bloodGroup: profile.bloodGroup,
+      goals: profile.goals,
+      allergiesCount: profile.allergies.length,
+      medicationsCount: profile.medications.length,
+      conditionsCount: profile.conditions.length
+    }, { severity: 'Success' });
+
+    onComplete(finalProfile);
   };
 
   return (
