@@ -109,48 +109,67 @@ export default function MedicineScanner({ userProfile }: MedicineScannerProps) {
     try {
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64 = reader.result as string;
+        try {
+          const base64 = reader.result as string;
 
-        const response = await fetch('/api/scan', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            image: base64,
-            mimeType: file.type,
-            userProfile,
-          }),
-        });
+          const response = await fetch('/api/scan', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              image: base64,
+              mimeType: file.type,
+              userProfile,
+            }),
+          });
 
-        if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.error || 'Failed to scan medicine');
+          if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || 'Failed to scan medicine');
+          }
+
+          const data = await response.json();
+          setScannedMed(data);
+          setIsScanning(false);
+
+          // Log live camera/upload scan to Splunk HEC
+          const conflicts = data.profileConflicts || [];
+          const severity = conflicts.length > 0 ? (conflicts.some((c: any) => c.severity === 'High') ? 'High' : 'Warning') : 'Success';
+          logToSplunk('medicine_scan', {
+            action: 'medicine_scanned',
+            scanSource: 'camera_upload',
+            medicineName: data.name,
+            generic: data.generic,
+            category: data.category,
+            safetyScore: data.safetyScore,
+            manufacturer: data.manufacturer,
+            hasConflicts: conflicts.length > 0,
+            conflictsCount: conflicts.length,
+            conflictsDetails: conflicts
+          }, { severity });
+        } catch (err: any) {
+          console.error(err);
+          setErrorMsg(err.message || 'An error occurred while scanning the medicine package.');
+          setIsScanning(false);
+
+          // Log scan failure to Splunk HEC
+          logToSplunk('medicine_scan', {
+            action: 'medicine_scan_failed',
+            scanSource: 'camera_upload',
+            error: err.message || String(err)
+          }, { severity: 'High' });
         }
-
-        const data = await response.json();
-        setScannedMed(data);
-        setIsScanning(false);
-
-        // Log live camera/upload scan to Splunk HEC
-        const conflicts = data.profileConflicts || [];
-        const severity = conflicts.length > 0 ? (conflicts.some((c: any) => c.severity === 'High') ? 'High' : 'Warning') : 'Success';
-        logToSplunk('medicine_scan', {
-          action: 'medicine_scanned',
-          scanSource: 'camera_upload',
-          medicineName: data.name,
-          generic: data.generic,
-          category: data.category,
-          safetyScore: data.safetyScore,
-          manufacturer: data.manufacturer,
-          hasConflicts: conflicts.length > 0,
-          conflictsCount: conflicts.length,
-          conflictsDetails: conflicts
-        }, { severity });
       };
       
       reader.onerror = () => {
-        throw new Error('Failed to read image file');
+        setErrorMsg('Failed to read image file');
+        setIsScanning(false);
+        logToSplunk('medicine_scan', {
+          action: 'medicine_scan_failed',
+          scanSource: 'camera_upload',
+          error: 'Failed to read image file'
+        }, { severity: 'High' });
       };
 
       reader.readAsDataURL(file);

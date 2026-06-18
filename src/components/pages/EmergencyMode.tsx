@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   AlertTriangle, Phone, Download, Share2, QrCode, 
-  Heart, Pill, ShieldAlert, User, Clock, X
+  Heart, Pill, ShieldAlert, User, Clock, X, MapPin, Navigation
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logToSplunk } from '@/lib/splunk-client';
@@ -24,6 +24,9 @@ export default function EmergencyMode({ userProfile }: EmergencyProps) {
   const [countdown, setCountdown] = useState(5);
   const [smsSent, setSmsSent] = useState(false);
   const [pulseIntensity, setPulseIntensity] = useState(0);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [address, setAddress] = useState<string | null>(null);
 
   const emergencyContacts = [
     { name: 'Dr. Sarah Mitchell', role: 'Primary Physician', phone: '+1 (555) 0142' },
@@ -45,7 +48,8 @@ export default function EmergencyMode({ userProfile }: EmergencyProps) {
         contactsNotified: emergencyContacts.map(c => ({ name: c.name, role: c.role })),
         bloodGroup: userProfile.bloodGroup,
         allergies: userProfile.allergies,
-        medications: userProfile.medications
+        medications: userProfile.medications,
+        coordinates: coords ? `${coords.lat}, ${coords.lng}` : 'Not detected'
       }, { severity: 'Critical' });
 
       // Trigger backend SMS and Discord alerts
@@ -58,11 +62,16 @@ export default function EmergencyMode({ userProfile }: EmergencyProps) {
           allergies: userProfile.allergies,
           medications: userProfile.medications,
           conditions: userProfile.conditions || [],
-          contacts: emergencyContacts
+          contacts: emergencyContacts,
+          location: coords ? {
+            lat: coords.lat,
+            lng: coords.lng,
+            mapsUrl: `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`
+          } : null
         })
       }).catch(err => console.error('Failed to trigger backend emergency alert:', err));
     }
-  }, [isActivated, countdown, smsSent, userProfile, emergencyContacts]);
+  }, [isActivated, countdown, smsSent, userProfile, emergencyContacts, coords]);
 
   useEffect(() => {
     if (!isActivated) return;
@@ -120,10 +129,76 @@ HIPAA COMPLIANT · ENCRYPTED TELEMETRY
     }
   };
 
+  useEffect(() => {
+    let watchId: number | null = null;
+
+    const callLocationApi = async (lat?: number, lng?: number) => {
+      try {
+        const response = await fetch('/api/location', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lat, lng })
+        });
+        if (!response.ok) throw new Error('Location API failed');
+        const data = await response.json();
+        
+        setCoords({ lat: data.lat, lng: data.lng });
+        setAddress(data.address || `${data.lat.toFixed(5)}, ${data.lng.toFixed(5)}`);
+        
+        logToSplunk('emergency_sos', {
+          action: 'emergency_location_resolved',
+          lat: data.lat,
+          lng: data.lng,
+          address: data.address,
+          provider: data.provider
+        }, { severity: 'Info' });
+      } catch (err) {
+        console.error('Emergency location resolution error:', err);
+        if (lat && lng) {
+          setCoords({ lat, lng });
+          setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        } else {
+          setAddress('Could not resolve physical address.');
+        }
+      } finally {
+        setLocating(false);
+      }
+    };
+
+    if (isActivated) {
+      setLocating(true);
+      if (typeof window !== 'undefined' && navigator.geolocation) {
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            callLocationApi(position.coords.latitude, position.coords.longitude);
+          },
+          (error) => {
+            console.warn('Emergency browser live Geolocation failed, trying server-side lookup:', error);
+            callLocationApi();
+          },
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+      } else {
+        callLocationApi();
+      }
+    } else {
+      setCoords(null);
+      setAddress(null);
+    }
+
+    return () => {
+      if (watchId !== null && typeof window !== 'undefined' && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [isActivated]);
+
   const handleActivate = () => {
     setIsActivated(true);
     setCountdown(5);
     setSmsSent(false);
+    setAddress(null);
+    
     // Log emergency initiated to Splunk HEC
     logToSplunk('emergency_sos', {
       action: 'emergency_initiated',
@@ -135,6 +210,8 @@ HIPAA COMPLIANT · ENCRYPTED TELEMETRY
     setIsActivated(false);
     setCountdown(5);
     setSmsSent(false);
+    setCoords(null);
+    setAddress(null);
     // Log emergency deactivated to Splunk HEC
     logToSplunk('emergency_sos', {
       action: 'emergency_deactivated'
@@ -373,6 +450,75 @@ HIPAA COMPLIANT · ENCRYPTED TELEMETRY
                   <p className="text-[10px] text-slate-800 font-semibold text-center">Scan for full medical profile</p>
                 </div>
               </div>
+            </div>
+
+            {/* Smart Emergency Locator */}
+            <div className="glass-panel p-6 rounded-2xl border border-rose-500/20 space-y-4">
+              <h3 className="text-sm font-display font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-rose-500" /> Smart Emergency Locator
+              </h3>
+              
+              {locating ? (
+                <div className="flex items-center gap-2 text-xs text-slate-400 py-3">
+                  <span className="w-4 h-4 rounded-full border-2 border-white/20 border-t-rose-500 animate-spin" />
+                  <span>Pinpointing GPS coordinates...</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="bg-white/3 border border-white/5 p-3.5 rounded-xl flex flex-col justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] text-slate-500 font-mono">YOUR GPS LOCATION</p>
+                      <p className="text-xs font-semibold text-white mt-1">
+                        {coords ? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` : 'Location Permission Denied'}
+                      </p>
+                      {address && (
+                        <p className="text-[9px] text-slate-300 mt-1 font-sans italic leading-snug">{address}</p>
+                      )}
+                      <p className="text-[9px] text-slate-500 mt-1">Shared live with family via emergency channels</p>
+                    </div>
+                    {coords && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-center gap-1.5 py-1.5 bg-white/5 hover:bg-white/10 text-[10px] font-bold text-white rounded-lg border border-white/10 transition"
+                      >
+                        <Navigation className="w-3 h-3 text-rose-400" /> View Map Location
+                      </a>
+                    )}
+                  </div>
+
+                  <div className="bg-white/3 border border-white/5 p-3.5 rounded-xl flex flex-col justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] text-slate-500 font-mono">NEAREST EMERGENCY ROOM</p>
+                      <p className="text-xs font-semibold text-white mt-1">City Memorial Hospital ER</p>
+                      <p className="text-[9px] text-emerald-400 font-mono mt-1">1.2 km away · Open 24/7</p>
+                    </div>
+                    <a
+                      href="https://www.google.com/maps/dir/?api=1&destination=City+Memorial+Hospital+ER"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-center gap-1.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-[10px] font-bold text-rose-400 rounded-lg border border-rose-500/20 transition"
+                    >
+                      <Navigation className="w-3 h-3" /> Get SOS Route Directions
+                    </a>
+                  </div>
+
+                  <div className="bg-white/3 border border-white/5 p-3.5 rounded-xl flex flex-col justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] text-slate-500 font-mono">DISPATCH AMBULANCE</p>
+                      <p className="text-xs font-semibold text-white mt-1">National Emergency Service</p>
+                      <p className="text-[9px] text-slate-500 mt-1">Priority dispatch line</p>
+                    </div>
+                    <a
+                      href="tel:911"
+                      className="flex items-center justify-center gap-1.5 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-[10px] font-bold text-white rounded-lg border border-rose-500/30 transition"
+                    >
+                      <Phone className="w-3 h-3 text-rose-400" /> Dispatch Call (911)
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Emergency Contacts Status */}

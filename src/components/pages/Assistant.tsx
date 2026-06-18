@@ -206,8 +206,48 @@ export default function Assistant({ userProfile }: AssistantProps) {
       await audio.play();
 
     } catch (error) {
-      console.error('TTS playback error:', error);
-      alert('Failed to synthesize speech. Please check your OpenAI API key configuration.');
+      console.warn('OpenAI TTS failed, falling back to browser Web Speech API:', error);
+      
+      // Fallback: Web Speech API (speechSynthesis)
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        // Clean markdown characters from the input text before speaking
+        const cleanText = text.replace(/[*#_\-`]/g, '');
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        
+        // Map language name to voice lang code
+        const langMap: { [key: string]: string } = {
+          'US English': 'en-US',
+          'Hindi': 'hi-IN',
+          'Telugu': 'te-IN',
+          'Tamil': 'ta-IN',
+          'Kannada': 'kn-IN',
+          'Marathi': 'mr-IN',
+          'Bengali': 'bn-IN',
+          'Spanish': 'es-ES',
+          'Arabic': 'ar-SA'
+        };
+        utterance.lang = langMap[langName] || 'en-US';
+
+        setSpeakingMsgId(msgId);
+        
+        utterance.onend = () => {
+          setSpeakingMsgId(null);
+          activeAudioRef.current = null;
+        };
+        utterance.onerror = () => {
+          setSpeakingMsgId(null);
+          activeAudioRef.current = null;
+        };
+
+        window.speechSynthesis.speak(utterance);
+        
+        // Save ref to cancel if clicked again
+        activeAudioRef.current = {
+          pause: () => window.speechSynthesis.cancel()
+        } as any;
+      } else {
+        alert('Failed to synthesize speech. Please check your OpenAI API key configuration.');
+      }
     } finally {
       setIsTyping(false);
     }

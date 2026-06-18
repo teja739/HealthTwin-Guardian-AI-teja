@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Target, Activity, Brain, FileText,
   Scan, Shield, Users, Globe, AlertTriangle, LogOut,
-  ChevronLeft, ChevronRight, Menu, X, Database
+  ChevronLeft, ChevronRight, Menu, X, Database,
+  Calendar, Plane, Heart, Smile
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserButton } from '@clerk/nextjs';
@@ -21,6 +22,9 @@ import FamilyHealth from './pages/FamilyHealth';
 import Assistant from './pages/Assistant';
 import EmergencyMode from './pages/EmergencyMode';
 import SplunkDashboard from './pages/SplunkDashboard';
+import Appointments from './pages/Appointments';
+import TravelAssistant from './pages/TravelAssistant';
+import WellnessTracker from './pages/WellnessTracker';
 
 interface DashboardProps {
   userProfile: {
@@ -39,30 +43,37 @@ export default function Dashboard({ userProfile, onLogout }: DashboardProps) {
   const [activePage, setActivePage] = useState('home');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [elderlyMode, setElderlyMode] = useState(false);
 
   const navItems = [
     { id: 'home', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'mission', label: 'Mission Control', icon: Target },
+    { id: 'appointments', label: 'Book Appointments', icon: Calendar },
+    { id: 'travel', label: 'Travel Assistant', icon: Plane },
+    { id: 'wellness', label: 'Wellness Tracker', icon: Heart },
     { id: 'bodymap', label: 'Body Risk Map', icon: Activity },
-    { id: 'agents', label: 'AI Agent Swarm', icon: Brain },
-    { id: 'reports', label: 'Report Analyzer', icon: FileText },
     { id: 'scanner', label: 'Medicine Scanner', icon: Scan },
     { id: 'safety', label: 'Safety Center', icon: Shield },
     { id: 'family', label: 'Family Health', icon: Users },
     { id: 'assistant', label: 'AI Assistant', icon: Globe },
+    { id: 'mission', label: 'Mission Control', icon: Target },
+    { id: 'agents', label: 'AI Agent Swarm', icon: Brain },
+    { id: 'reports', label: 'Report Analyzer', icon: FileText },
     { id: 'splunk', label: 'Splunk Observability', icon: Database },
   ];
 
   const renderPage = () => {
     switch (activePage) {
       case 'home': return <Home userProfile={userProfile} />;
+      case 'appointments': return <Appointments userProfile={userProfile} />;
+      case 'travel': return <TravelAssistant userProfile={userProfile} />;
+      case 'wellness': return <WellnessTracker userProfile={userProfile} />;
       case 'mission': return <MissionControl />;
-      case 'bodymap': return <BodyMap />;
+      case 'bodymap': return <BodyMap userProfile={userProfile} />;
       case 'agents': return <AgentSwarm />;
       case 'reports': return <ReportAnalyzer />;
       case 'scanner': return <MedicineScanner userProfile={userProfile} />;
       case 'safety': return <SafetyCenter />;
-      case 'family': return <FamilyHealth />;
+      case 'family': return <FamilyHealth userProfile={userProfile} />;
       case 'assistant': return <Assistant userProfile={userProfile} />;
       case 'splunk': return <SplunkDashboard />;
       case 'emergency': return <EmergencyMode userProfile={userProfile} />;
@@ -75,7 +86,30 @@ export default function Dashboard({ userProfile, onLogout }: DashboardProps) {
     : navItems.find(n => n.id === activePage)?.label || 'Dashboard';
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className={cn("min-h-screen bg-background flex", elderlyMode && "elderly-mode")}>
+      {elderlyMode && (
+        <style dangerouslySetInnerHTML={{__html: `
+          .elderly-mode {
+            font-size: 125% !important;
+          }
+          .elderly-mode button, .elderly-mode select, .elderly-mode input, .elderly-mode textarea {
+            font-size: 115% !important;
+            padding-top: 0.8rem !important;
+            padding-bottom: 0.8rem !important;
+          }
+          .elderly-mode h1 { font-size: 2.2rem !important; }
+          .elderly-mode h2 { font-size: 1.8rem !important; }
+          .elderly-mode h3 { font-size: 1.4rem !important; }
+          .elderly-mode p, .elderly-mode span, .elderly-mode td, .elderly-mode li {
+            font-size: 1.1rem !important;
+            line-height: 1.7 !important;
+          }
+          .elderly-mode .glass-panel {
+            border-width: 1.5px !important;
+            border-color: rgba(255, 255, 255, 0.18) !important;
+          }
+        `}} />
+      )}
       {/* Desktop Sidebar */}
       <aside className={cn(
         "hidden lg:flex flex-col border-r border-white/5 bg-slate-950/80 transition-all duration-300 h-screen sticky top-0",
@@ -131,6 +165,20 @@ export default function Dashboard({ userProfile, onLogout }: DashboardProps) {
 
         {/* Emergency + Profile at Bottom */}
         <div className="p-2 space-y-1.5 border-t border-white/5">
+          <button
+            onClick={() => setElderlyMode(!elderlyMode)}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200",
+              elderlyMode
+                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                : 'text-slate-400 hover:text-white hover:bg-white/5',
+              sidebarCollapsed && 'justify-center px-0'
+            )}
+          >
+            <Smile className="w-4 h-4 shrink-0 text-amber-400" />
+            {!sidebarCollapsed && <span>Elderly Care: {elderlyMode ? 'ON' : 'OFF'}</span>}
+          </button>
+
           <button
             onClick={() => setActivePage('emergency')}
             className={cn(

@@ -1,188 +1,370 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Users, Heart, AlertTriangle, Calendar, Pill, Plus, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Users, Heart, AlertTriangle, Calendar, 
+  Pill, Plus, ChevronRight, X, Sparkles, CheckCircle2, Loader2 
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getFamilyMembers, addFamilyMember } from '@/lib/supabase';
+import { logToSplunk } from '@/lib/splunk-client';
 
-export default function FamilyHealth() {
+interface FamilyHealthProps {
+  userProfile: {
+    email: string;
+  };
+}
+
+export default function FamilyHealth({ userProfile }: FamilyHealthProps) {
+  const [family, setFamily] = useState<any[]>([]);
   const [selectedMember, setSelectedMember] = useState<number>(0);
+  const [loading, setLoading] = useState(false);
+  
+  // Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newRelation, setNewRelation] = useState('Spouse');
+  const [newAge, setNewAge] = useState('');
+  const [newBloodGroup, setNewBloodGroup] = useState('O+');
+  const [newConditions, setNewConditions] = useState('');
+  const [newMedications, setNewMedications] = useState('');
+  const [saveLoading, setSaveLoading] = useState(false);
 
-  const family = [
-    {
-      name: 'You (Primary)',
-      relation: 'Self',
-      age: 32,
-      avatar: '👤',
-      healthScore: 88,
-      risk: 'Low',
-      bloodGroup: 'O+',
-      conditions: ['Mild Hypertension'],
-      medications: 6,
-      nextAppt: 'Jun 28, 2026',
-      alerts: []
-    },
-    {
-      name: 'Priya',
-      relation: 'Spouse',
-      age: 30,
-      avatar: '👩',
-      healthScore: 94,
-      risk: 'Low',
-      bloodGroup: 'A+',
-      conditions: [],
-      medications: 1,
-      nextAppt: 'Jul 15, 2026',
-      alerts: []
-    },
-    {
-      name: 'Arjun',
-      relation: 'Son',
-      age: 6,
-      avatar: '👦',
-      healthScore: 97,
-      risk: 'Low',
-      bloodGroup: 'O+',
-      conditions: [],
-      medications: 0,
-      nextAppt: 'Aug 02, 2026',
-      alerts: ['Vaccination due: DPT Booster']
-    },
-    {
-      name: 'Rajesh',
-      relation: 'Father',
-      age: 62,
-      avatar: '👨‍🦳',
-      healthScore: 71,
-      risk: 'Medium',
-      bloodGroup: 'B+',
-      conditions: ['Type 2 Diabetes', 'Hypertension'],
-      medications: 4,
-      nextAppt: 'Jun 20, 2026',
-      alerts: ['HbA1c test overdue', 'Blood pressure trending high']
+  useEffect(() => {
+    async function loadFamily() {
+      setLoading(true);
+      const data = await getFamilyMembers(userProfile.email);
+      setFamily(data);
+      setLoading(false);
     }
-  ];
+    loadFamily();
+  }, [userProfile.email]);
 
-  const member = family[selectedMember];
+  const handleAddMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim() || !newAge || saveLoading) return;
+    
+    setSaveLoading(true);
+
+    const conditionsArray = newConditions
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    const medicationsArray = newMedications
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    // Determine simulated health score & risk level based on age and conditions
+    let healthScore = 95;
+    let risk = 'Low';
+    if (conditionsArray.length > 0) {
+      healthScore -= 10 * conditionsArray.length;
+      risk = 'Medium';
+    }
+    if (parseInt(newAge) > 60) {
+      healthScore -= 10;
+      risk = 'Medium';
+    }
+    if (healthScore < 75) {
+      risk = 'High';
+    }
+    healthScore = Math.max(healthScore, 45);
+
+    const member = {
+      name: newName,
+      relation: newRelation,
+      age: parseInt(newAge),
+      bloodGroup: newBloodGroup,
+      conditions: conditionsArray,
+      medications: medicationsArray,
+      avatar: newRelation === 'Spouse' ? '👩' : newRelation === 'Son' || newRelation === 'Daughter' ? '👧' : '👨‍🦳',
+      healthScore,
+      risk
+    };
+
+    try {
+      const saved = await addFamilyMember(userProfile.email, member);
+      setFamily(prev => [...prev, saved]);
+      
+      logToSplunk('family_health', {
+        action: 'family_member_added',
+        relation: newRelation,
+        age: parseInt(newAge),
+        conditionsCount: conditionsArray.length
+      }, { severity: 'Success' });
+
+      // Reset Form & Close Modal
+      setNewName('');
+      setNewRelation('Spouse');
+      setNewAge('');
+      setNewBloodGroup('O+');
+      setNewConditions('');
+      setNewMedications('');
+      setShowAddModal(false);
+
+    } catch (err) {
+      console.error(err);
+      alert('Failed to add family member.');
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
+  const member = family[selectedMember] || null;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      
       {/* Family Members List */}
       <div className="lg:col-span-2 space-y-5">
         <div className="glass-panel p-6 rounded-2xl space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-display font-semibold text-white">Family Members</h3>
-            <button className="p-1.5 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition">
+            <h3 className="text-lg font-display font-semibold text-white flex items-center gap-1.5">
+              <Users className="w-5 h-5 text-medical-blue" /> Family Guardian
+            </h3>
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="p-1.5 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition"
+              title="Add Family Member"
+            >
               <Plus className="w-4 h-4 text-medical-blue" />
             </button>
           </div>
 
-          <div className="space-y-2.5">
-            {family.map((m, idx) => (
-              <button
-                key={idx}
-                onClick={() => setSelectedMember(idx)}
-                className={cn(
-                  "w-full text-left p-4 rounded-xl border flex items-center justify-between transition duration-200",
-                  selectedMember === idx ? 'border-medical-blue bg-white/5' : 'border-white/5 hover:border-white/10'
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-lg">
-                    {m.avatar}
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-white">{m.name}</h4>
-                    <span className="text-[10px] text-slate-500">{m.relation} · Age {m.age}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {m.alerts.length > 0 && (
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+          {loading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="w-6 h-6 text-medical-blue animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {family.map((m, idx) => (
+                <button
+                  key={m.id || idx}
+                  onClick={() => setSelectedMember(idx)}
+                  className={cn(
+                    "w-full text-left p-4 rounded-xl border flex items-center justify-between transition duration-200",
+                    selectedMember === idx ? 'border-medical-blue bg-white/5' : 'border-white/5 hover:border-white/10'
                   )}
-                  <span className={cn(
-                    "text-xs font-bold font-display",
-                    m.healthScore >= 85 ? 'text-emerald-400' : m.healthScore >= 70 ? 'text-amber-400' : 'text-rose-500'
-                  )}>{m.healthScore}</span>
-                </div>
-              </button>
-            ))}
-          </div>
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-lg">
+                      {m.avatar}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-white">{m.name}</h4>
+                      <span className="text-[10px] text-slate-500">{m.relation} · Age {m.age}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {m.conditions && m.conditions.length > 0 && (
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                    )}
+                    <span className={cn(
+                      "text-xs font-bold font-display",
+                      m.healthScore >= 85 ? 'text-emerald-400' : m.healthScore >= 70 ? 'text-amber-400' : 'text-rose-500'
+                    )}>{m.healthScore}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Member Detail Panel */}
-      <div className="lg:col-span-3 glass-panel p-6 rounded-2xl space-y-5">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/5 pb-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-2xl">
-              {member.avatar}
+      <div className="lg:col-span-3">
+        {member ? (
+          <div className="glass-panel p-6 rounded-2xl space-y-5">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-2xl">
+                  {member.avatar}
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-white text-lg">{member.name}</h3>
+                  <p className="text-xs text-slate-400">{member.relation} · Blood Group: {member.bloodGroup || 'O+'}</p>
+                </div>
+              </div>
+              <div className="text-center">
+                <div className={cn(
+                  "text-3xl font-display font-extrabold",
+                  member.healthScore >= 85 ? 'text-emerald-400' : member.healthScore >= 70 ? 'text-amber-400' : 'text-rose-500'
+                )}>{member.healthScore}</div>
+                <div className="text-[9px] text-slate-500 uppercase tracking-wider">Health Score</div>
+              </div>
             </div>
-            <div>
-              <h3 className="font-display font-bold text-white text-lg">{member.name}</h3>
-              <p className="text-xs text-slate-400">{member.relation} · Blood Group: {member.bloodGroup}</p>
-            </div>
-          </div>
-          <div className="text-center">
-            <div className={cn(
-              "text-3xl font-display font-extrabold",
-              member.healthScore >= 85 ? 'text-emerald-400' : member.healthScore >= 70 ? 'text-amber-400' : 'text-rose-500'
-            )}>{member.healthScore}</div>
-            <div className="text-[9px] text-slate-500 uppercase tracking-wider">Health Score</div>
-          </div>
-        </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { icon: Heart, label: 'Risk Level', val: member.risk, color: member.risk === 'Low' ? 'text-emerald-400' : 'text-amber-400' },
-            { icon: Pill, label: 'Medications', val: member.medications.toString(), color: 'text-medical-blue' },
-            { icon: Calendar, label: 'Next Visit', val: member.nextAppt.split(',')[0], color: 'text-medical-teal' },
-            { icon: AlertTriangle, label: 'Alerts', val: member.alerts.length.toString(), color: member.alerts.length > 0 ? 'text-amber-400' : 'text-emerald-400' }
-          ].map((s, i) => (
-            <div key={i} className="bg-white/3 border border-white/5 p-3.5 rounded-xl">
-              <s.icon className={cn("w-4 h-4 mb-1.5", s.color)} />
-              <p className="text-[10px] text-slate-500">{s.label}</p>
-              <p className={cn("text-sm font-bold mt-0.5", s.color)}>{s.val}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Conditions */}
-        {member.conditions.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Known Conditions</p>
-            <div className="flex flex-wrap gap-2">
-              {member.conditions.map((c, i) => (
-                <span key={i} className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg text-xs font-semibold">{c}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Active Alerts */}
-        {member.alerts.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Active Alerts</p>
-            <div className="space-y-2">
-              {member.alerts.map((alert, i) => (
-                <div key={i} className="flex items-start gap-2.5 p-3 bg-amber-500/5 border border-amber-500/15 rounded-xl text-xs text-amber-300">
-                  <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span>{alert}</span>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { icon: Heart, label: 'Risk Level', val: member.risk, color: member.risk === 'Low' ? 'text-emerald-400' : 'text-amber-400' },
+                { icon: Pill, label: 'Medications', val: (member.medications?.length || 0).toString(), color: 'text-medical-blue' },
+                { icon: Calendar, label: 'Next Visit', val: 'Scheduled', color: 'text-medical-teal' },
+                { icon: AlertTriangle, label: 'Alerts', val: (member.conditions?.length || 0).toString(), color: (member.conditions?.length || 0) > 0 ? 'text-amber-400' : 'text-emerald-400' }
+              ].map((s, i) => (
+                <div key={i} className="bg-white/3 border border-white/5 p-3.5 rounded-xl">
+                  <s.icon className={cn("w-4 h-4 mb-1.5", s.color)} />
+                  <p className="text-[10px] text-slate-500">{s.label}</p>
+                  <p className={cn("text-sm font-bold mt-0.5", s.color)}>{s.val}</p>
                 </div>
               ))}
             </div>
-          </div>
-        )}
 
-        {member.alerts.length === 0 && member.conditions.length === 0 && (
-          <div className="p-4 bg-emerald-500/5 border border-emerald-500/15 rounded-xl flex items-center gap-3 text-xs text-emerald-400">
-            <Heart className="w-5 h-5" />
-            <span>All health markers are within normal range. No active alerts or concerns.</span>
+            {/* Conditions */}
+            {member.conditions && member.conditions.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Known Conditions</p>
+                <div className="flex flex-wrap gap-2">
+                  {member.conditions.map((c: string, i: number) => (
+                    <span key={i} className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg text-xs font-semibold">{c}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Medications List */}
+            {member.medications && member.medications.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Active Medications</p>
+                <div className="space-y-2">
+                  {member.medications.map((m: string, i: number) => (
+                    <div key={i} className="flex items-center gap-2 p-3 bg-white/3 border border-white/5 rounded-xl text-xs text-slate-300 font-mono">
+                      <Pill className="w-4 h-4 text-medical-blue" />
+                      <span>{m}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(!member.conditions || member.conditions.length === 0) && (!member.medications || member.medications.length === 0) && (
+              <div className="p-4 bg-emerald-500/5 border border-emerald-500/15 rounded-xl flex items-center gap-3 text-xs text-emerald-400">
+                <Heart className="w-5 h-5" />
+                <span>All health markers are within normal range. No active alerts or concerns.</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="glass-panel p-6 rounded-2xl text-center py-12 text-xs text-slate-400">
+            No family member records found.
           </div>
         )}
       </div>
+
+      {/* Add Family Member Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-panel p-6 rounded-2xl w-full max-w-md space-y-4 relative"
+          >
+            <button 
+              onClick={() => setShowAddModal(false)}
+              className="absolute right-4 top-4 p-1 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div>
+              <h3 className="text-base font-display font-bold text-white flex items-center gap-1.5">
+                <Sparkles className="w-4.5 h-4.5 text-medical-teal" /> Add Family Record
+              </h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Manage health records for your family in one place.</p>
+            </div>
+
+            <form onSubmit={handleAddMember} className="space-y-3.5 text-xs">
+              <div>
+                <label className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="glass-input w-full px-3 py-2 text-xs mt-1.5 bg-slate-950"
+                  placeholder="e.g. Ramesh Rajesh"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Relation</label>
+                  <select
+                    value={newRelation}
+                    onChange={(e) => setNewRelation(e.target.value)}
+                    className="glass-input w-full px-3 py-2 text-xs mt-1.5 bg-slate-950"
+                  >
+                    <option value="Spouse">Spouse</option>
+                    <option value="Son">Son</option>
+                    <option value="Daughter">Daughter</option>
+                    <option value="Father">Father</option>
+                    <option value="Mother">Mother</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Age</label>
+                  <input
+                    type="number"
+                    required
+                    value={newAge}
+                    onChange={(e) => setNewAge(e.target.value)}
+                    className="glass-input w-full px-3 py-2 text-xs mt-1.5 bg-slate-950"
+                    placeholder="e.g. 58"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Blood Group</label>
+                <select
+                  value={newBloodGroup}
+                  onChange={(e) => setNewBloodGroup(e.target.value)}
+                  className="glass-input w-full px-3 py-2 text-xs mt-1.5 bg-slate-950"
+                >
+                  {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (
+                    <option key={bg} value={bg}>{bg}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Known Conditions</label>
+                <input
+                  type="text"
+                  value={newConditions}
+                  onChange={(e) => setNewConditions(e.target.value)}
+                  className="glass-input w-full px-3 py-2 text-xs mt-1.5 bg-slate-950"
+                  placeholder="e.g. Asthma, Hypertension (comma separated)"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Current Medications</label>
+                <textarea
+                  value={newMedications}
+                  onChange={(e) => setNewMedications(e.target.value)}
+                  className="glass-input w-full px-3 py-2 text-xs mt-1.5 h-16 bg-slate-950 resize-none"
+                  placeholder="One medicine per line"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={saveLoading}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-medical-blue to-medical-teal rounded-xl text-xs font-bold text-white shadow-[0_0_20px_rgba(0,210,255,0.15)] hover:shadow-[0_0_30px_rgba(0,210,255,0.3)] transition"
+              >
+                {saveLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm & Save Record'}
+              </button>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
     </div>
   );
 }

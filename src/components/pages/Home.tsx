@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Activity, Heart, Brain, Moon, 
   TrendingUp, AlertCircle, ShieldCheck, 
-  Clock, Flame, RefreshCw, ChevronRight
+  Clock, Flame, RefreshCw, ChevronRight,
+  CheckCircle2, Sparkles, Calendar, User, MapPin, Sun
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logToSplunk } from '@/lib/splunk-client';
+import { getAppointments, getMedicationLogs, saveMedicationLog } from '@/lib/supabase';
 
 interface HomeProps {
   userProfile: {
@@ -26,6 +28,55 @@ export default function Home({ userProfile }: HomeProps) {
   const [hoveredMetric, setHoveredMetric] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<'7D' | '30D' | '12M'>('7D');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [medLogs, setMedLogs] = useState<any[]>([]);
+  const [copilotSummary, setCopilotSummary] = useState('');
+
+  const dateStr = new Date().toISOString().split('T')[0];
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      // 1. Fetch appointments
+      const appts = await getAppointments(userProfile.email);
+      setAppointments(appts.slice(0, 3)); // show top 3 upcoming
+
+      // 2. Fetch medication logs
+      const logs = await getMedicationLogs(userProfile.email, dateStr);
+      setMedLogs(logs);
+
+      // 3. Generate customized copilot greeting summary
+      const hasHypertension = userProfile.conditions.some(c => c.toLowerCase().includes('hypertension') || c.toLowerCase().includes('blood pressure'));
+      let greeting = `Your health profile is fully calibrated. All core biomarkers show parasympathetic dominance.`;
+      if (hasHypertension) {
+        greeting += ` ALERT: High temperatures are forecast today (33°C). Due to your Hypertension risk, restrict outdoor cardiovascular activities and keep sodium intake below 2,000mg.`;
+      }
+      setCopilotSummary(greeting);
+    }
+    loadDashboardData();
+  }, [userProfile.email, userProfile.conditions, dateStr]);
+
+  const handleToggleMed = async (medName: string, timeOfDay: string, currentTaken: boolean) => {
+    const nextTaken = !currentTaken;
+    try {
+      await saveMedicationLog(userProfile.email, dateStr, medName, timeOfDay, nextTaken);
+      
+      // Update local state
+      setMedLogs(prev => {
+        const filtered = prev.filter(l => !(l.medicineName === medName && l.timeOfDay === timeOfDay));
+        return [...filtered, { medicineName: medName, timeOfDay, taken: nextTaken, takenTime: nextTaken ? new Date().toISOString() : null }];
+      });
+
+      logToSplunk('medication_adherence', {
+        action: 'medication_adherence_toggled',
+        medicineName: medName,
+        timeOfDay,
+        taken: nextTaken
+      }, { severity: nextTaken ? 'Success' : 'Warning' });
+
+    } catch (err) {
+      console.error('Adherence logging failed:', err);
+    }
+  };
 
   const handleSyncVitals = async () => {
     setIsSyncing(true);
@@ -159,8 +210,9 @@ export default function Home({ userProfile }: HomeProps) {
           <h1 className="text-2xl md:text-3xl font-display font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
             Welcome back, {userProfile.name.split(' ')[0]}
           </h1>
-          <p className="text-slate-400 mt-1 text-sm md:text-base">
-            Your Health Twin is fully synchronized. Last vital telemetry refresh: 2 minutes ago.
+          <p className="text-slate-400 mt-1.5 text-xs md:text-sm flex items-start gap-1.5 max-w-3xl leading-relaxed">
+            <Sparkles className="w-4 h-4 text-medical-teal shrink-0 mt-0.5" />
+            <span><strong>Health Copilot:</strong> {copilotSummary}</span>
           </p>
         </div>
 
@@ -233,6 +285,99 @@ export default function Home({ userProfile }: HomeProps) {
             </motion.div>
           );
         })}
+      </div>
+
+      {/* Adherence & Appointments Triage */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Morning Adherence */}
+        <div className="glass-panel p-5 rounded-2xl space-y-4">
+          <div className="flex justify-between items-center border-b border-white/5 pb-2">
+            <h3 className="text-xs font-display font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <Sun className="w-4 h-4 text-amber-400" /> Morning Medications
+            </h3>
+            <span className="text-[10px] text-slate-500">Adherence</span>
+          </div>
+          <div className="space-y-2.5">
+            {userProfile.medications.slice(0, 3).map((med) => {
+              const isTaken = medLogs.some(l => l.medicineName === med && l.timeOfDay === 'morning' && l.taken);
+              return (
+                <button
+                  key={med}
+                  onClick={() => handleToggleMed(med, 'morning', isTaken)}
+                  className={cn(
+                    "w-full flex items-center justify-between p-3 rounded-xl border text-xs transition",
+                    isTaken ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400' : 'border-white/5 bg-white/2 text-slate-400 hover:border-white/10'
+                  )}
+                >
+                  <span>{med}</span>
+                  <CheckCircle2 className={cn("w-4 h-4", isTaken ? 'text-emerald-400' : 'text-slate-600')} />
+                </button>
+              );
+            })}
+            {userProfile.medications.length === 0 && (
+              <p className="text-xs text-slate-500 italic">No medications listed.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Night Adherence */}
+        <div className="glass-panel p-5 rounded-2xl space-y-4">
+          <div className="flex justify-between items-center border-b border-white/5 pb-2">
+            <h3 className="text-xs font-display font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <Moon className="w-4 h-4 text-indigo-400" /> Evening Medications
+            </h3>
+            <span className="text-[10px] text-slate-500">Adherence</span>
+          </div>
+          <div className="space-y-2.5">
+            {userProfile.medications.slice(3, 6).map((med) => {
+              const isTaken = medLogs.some(l => l.medicineName === med && l.timeOfDay === 'night' && l.taken);
+              return (
+                <button
+                  key={med}
+                  onClick={() => handleToggleMed(med, 'night', isTaken)}
+                  className={cn(
+                    "w-full flex items-center justify-between p-3 rounded-xl border text-xs transition",
+                    isTaken ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400' : 'border-white/5 bg-white/2 text-slate-400 hover:border-white/10'
+                  )}
+                >
+                  <span>{med}</span>
+                  <CheckCircle2 className={cn("w-4 h-4", isTaken ? 'text-emerald-400' : 'text-slate-600')} />
+                </button>
+              );
+            })}
+            {userProfile.medications.length <= 3 && (
+              <p className="text-xs text-slate-500 italic">No evening medications.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Scheduled Appointments */}
+        <div className="glass-panel p-5 rounded-2xl space-y-4">
+          <div className="flex justify-between items-center border-b border-white/5 pb-2">
+            <h3 className="text-xs font-display font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-medical-teal" /> Upcoming Consultations
+            </h3>
+            <span className="text-[10px] text-slate-500">Booked</span>
+          </div>
+          <div className="space-y-2.5 overflow-y-auto max-h-[160px] pr-1">
+            {appointments.map((appt, idx) => (
+              <div key={idx} className="p-3 bg-white/3 border border-white/5 rounded-xl space-y-1 text-xs">
+                <div className="flex justify-between items-start gap-1">
+                  <h4 className="font-bold text-white leading-tight">{appt.doctorName || appt.doctor_name}</h4>
+                  <span className="text-[9px] text-medical-blue font-mono shrink-0">
+                    {appt.appointmentTime ? appt.appointmentTime.replace('T', ' ').slice(5, 16) : appt.appointment_time}
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-500 truncate">{appt.specialty} · {appt.hospitalName || appt.hospital_name}</p>
+              </div>
+            ))}
+            {appointments.length === 0 && (
+              <div className="text-center py-6 text-[11px] text-slate-500 italic">
+                No upcoming appointments.
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Main Charts & Analytics Block */}
