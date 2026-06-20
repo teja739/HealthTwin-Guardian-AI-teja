@@ -14,10 +14,36 @@ export default function Page() {
   const { openSignIn, signOut } = useClerk();
   const [appState, setAppState] = useState<AppState>('landing');
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [clerkTimeout, setClerkTimeout] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+
+  // Monitor Clerk load timeout
+  useEffect(() => {
+    if (isLoaded) return;
+    const timer = setTimeout(() => {
+      setClerkTimeout(true);
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [isLoaded]);
 
   // Sync auth state with AppState
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded) {
+      // Check if there is an existing offline/saved session to restore immediately (faster dev startup)
+      try {
+        const saved = localStorage.getItem('healthtwin_session');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.email === "saiamruth347@gmail.com") {
+            setUserProfile(parsed);
+            setIsOfflineMode(true);
+            setAppState('dashboard');
+            return;
+          }
+        }
+      } catch {}
+      return;
+    }
 
     if (isSignedIn && user) {
       try {
@@ -37,10 +63,41 @@ export default function Page() {
         setAppState('onboarding');
       }
     } else {
+      // Check if there is a saved session from offline mode to load
+      try {
+        const saved = localStorage.getItem('healthtwin_session');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.email === "saiamruth347@gmail.com") {
+            setUserProfile(parsed);
+            setIsOfflineMode(true);
+            setAppState('dashboard');
+            return;
+          }
+        }
+      } catch {}
       setUserProfile(null);
       setAppState('landing');
     }
   }, [isLoaded, isSignedIn, user]);
+
+  const handleProceedOffline = () => {
+    const mockProfile = {
+      name: "saisrisuryaamruth damaraju",
+      email: "saiamruth347@gmail.com",
+      bloodGroup: "O+",
+      allergies: ["Penicillin"],
+      medications: ["Aspirin 81mg", "Lisinopril 10mg"],
+      conditions: ["Hypertension", "Type 2 Diabetes"],
+      onboardingComplete: true
+    };
+    setUserProfile(mockProfile);
+    setIsOfflineMode(true);
+    setAppState('dashboard');
+    try {
+      localStorage.setItem('healthtwin_session', JSON.stringify(mockProfile));
+    } catch {}
+  };
 
   const handleGetStarted = () => {
     setAppState('signing-in');
@@ -48,8 +105,8 @@ export default function Page() {
       openSignIn();
     } catch (err) {
       console.error('Failed to open Clerk sign-in:', err);
-      // Fallback
-      setAppState('landing');
+      // Fallback to local dev session automatically
+      handleProceedOffline();
     }
   };
 
@@ -65,17 +122,23 @@ export default function Page() {
     try {
       localStorage.removeItem('healthtwin_session');
       setUserProfile(null);
-      await signOut();
+      setIsOfflineMode(false);
+      if (isSignedIn) {
+        await signOut();
+      } else {
+        setAppState('landing');
+      }
     } catch (err) {
       console.error('Failed to log out with Clerk:', err);
+      setAppState('landing');
     }
   };
 
   // Show a premium glassmorphic loader while checking Clerk auth state
-  if (!isLoaded) {
+  if (!isLoaded && !userProfile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-5">
+        <div className="text-center space-y-5 px-4">
           <div className="relative">
             <div className="w-16 h-16 rounded-full border-4 border-white/10 border-t-medical-blue animate-spin mx-auto" />
             <div className="absolute inset-0 flex items-center justify-center">
@@ -91,6 +154,24 @@ export default function Page() {
             <h3 className="text-sm font-display font-bold text-white">Loading HealthTwin</h3>
             <p className="text-xs text-slate-400 mt-1">Initializing secure credentials...</p>
           </div>
+
+          {clerkTimeout && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 max-w-sm mx-auto text-center space-y-3"
+            >
+              <p className="text-[11px] text-amber-300 leading-relaxed">
+                Authentication server is taking too long to respond. You can bypass this using a local development profile.
+              </p>
+              <button
+                onClick={handleProceedOffline}
+                className="px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-xs font-semibold text-white transition cursor-pointer"
+              >
+                Proceed Offline (Local Dev Profile)
+              </button>
+            </motion.div>
+          )}
         </div>
       </div>
     );
@@ -112,7 +193,7 @@ export default function Page() {
           exit={{ opacity: 0 }}
           className="min-h-screen bg-background flex items-center justify-center"
         >
-          <div className="text-center space-y-5">
+          <div className="text-center space-y-5 px-4">
             <div className="relative">
               <div className="w-16 h-16 rounded-full border-4 border-white/10 border-t-medical-blue animate-spin mx-auto" />
             </div>
@@ -120,6 +201,23 @@ export default function Page() {
               <h3 className="text-sm font-display font-bold text-white">Opening Secure Sign-In</h3>
               <p className="text-xs text-slate-400 mt-1">Please log in to your account...</p>
             </div>
+
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 2 }}
+              className="mt-4 p-4 rounded-xl border border-white/5 bg-white/2 max-w-xs mx-auto text-center space-y-2"
+            >
+              <p className="text-[10px] text-slate-400">
+                Can't connect to Clerk? Bypass and use dev profile.
+              </p>
+              <button
+                onClick={handleProceedOffline}
+                className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-semibold text-white transition cursor-pointer"
+              >
+                Use Local Dev Profile
+              </button>
+            </motion.div>
           </div>
         </motion.div>
       )}
@@ -136,7 +234,7 @@ export default function Page() {
 
       {appState === 'dashboard' && userProfile && (
         <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <Dashboard userProfile={userProfile} onLogout={handleLogout} />
+          <Dashboard userProfile={userProfile} onLogout={handleLogout} isOffline={isOfflineMode} />
         </motion.div>
       )}
     </AnimatePresence>

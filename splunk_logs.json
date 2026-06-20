@@ -1,651 +1,5 @@
 [
   {
-    "time": 1781781456031,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:35.956Z",
-      "timestamp": "2026-06-18T11:17:36.031Z"
-    }
-  },
-  {
-    "time": 1781781456783,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:36.713Z",
-      "timestamp": "2026-06-18T11:17:36.783Z"
-    }
-  },
-  {
-    "time": 1781781458171,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:38.108Z",
-      "timestamp": "2026-06-18T11:17:38.171Z"
-    }
-  },
-  {
-    "time": 1781781458772,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:38.589Z",
-      "timestamp": "2026-06-18T11:17:38.772Z"
-    }
-  },
-  {
-    "time": 1781781459388,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:39.339Z",
-      "timestamp": "2026-06-18T11:17:39.388Z"
-    }
-  },
-  {
-    "time": 1781781460769,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:40.709Z",
-      "timestamp": "2026-06-18T11:17:40.769Z"
-    }
-  },
-  {
-    "time": 1781781461795,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:41.711Z",
-      "timestamp": "2026-06-18T11:17:41.795Z"
-    }
-  },
-  {
-    "time": 1781781462534,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:42.493Z",
-      "timestamp": "2026-06-18T11:17:42.534Z"
-    }
-  },
-  {
-    "time": 1781781463865,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:43.770Z",
-      "timestamp": "2026-06-18T11:17:43.865Z"
-    }
-  },
-  {
-    "time": 1781781464773,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:44.321Z",
-      "timestamp": "2026-06-18T11:17:44.773Z"
-    }
-  },
-  {
-    "time": 1781781465355,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:45.288Z",
-      "timestamp": "2026-06-18T11:17:45.355Z"
-    }
-  },
-  {
-    "time": 1781781467602,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:47.541Z",
-      "timestamp": "2026-06-18T11:17:47.602Z"
-    }
-  },
-  {
-    "time": 1781781468365,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:48.307Z",
-      "timestamp": "2026-06-18T11:17:48.365Z"
-    }
-  },
-  {
-    "time": 1781781468707,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:48.606Z",
-      "timestamp": "2026-06-18T11:17:48.707Z"
-    }
-  },
-  {
-    "time": 1781781470533,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:50.431Z",
-      "timestamp": "2026-06-18T11:17:50.533Z"
-    }
-  },
-  {
-    "time": 1781781471244,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:51.178Z",
-      "timestamp": "2026-06-18T11:17:51.244Z"
-    }
-  },
-  {
-    "time": 1781781471614,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:51.294Z",
-      "timestamp": "2026-06-18T11:17:51.614Z"
-    }
-  },
-  {
-    "time": 1781781473208,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:53.166Z",
-      "timestamp": "2026-06-18T11:17:53.208Z"
-    }
-  },
-  {
-    "time": 1781781474310,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:54.088Z",
-      "timestamp": "2026-06-18T11:17:54.310Z"
-    }
-  },
-  {
-    "time": 1781781474861,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:54.801Z",
-      "timestamp": "2026-06-18T11:17:54.861Z"
-    }
-  },
-  {
-    "time": 1781781476549,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:56.474Z",
-      "timestamp": "2026-06-18T11:17:56.549Z"
-    }
-  },
-  {
-    "time": 1781781477190,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:57.112Z",
-      "timestamp": "2026-06-18T11:17:57.190Z"
-    }
-  },
-  {
-    "time": 1781781477599,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:57.518Z",
-      "timestamp": "2026-06-18T11:17:57.599Z"
-    }
-  },
-  {
-    "time": 1781781479037,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:58.973Z",
-      "timestamp": "2026-06-18T11:17:59.037Z"
-    }
-  },
-  {
-    "time": 1781781479686,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:17:59.590Z",
-      "timestamp": "2026-06-18T11:17:59.686Z"
-    }
-  },
-  {
-    "time": 1781781481012,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:18:00.815Z",
-      "timestamp": "2026-06-18T11:18:01.012Z"
-    }
-  },
-  {
-    "time": 1781781482373,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:18:02.318Z",
-      "timestamp": "2026-06-18T11:18:02.373Z"
-    }
-  },
-  {
-    "time": 1781781483176,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:18:03.117Z",
-      "timestamp": "2026-06-18T11:18:03.176Z"
-    }
-  },
-  {
-    "time": 1781781483785,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:18:03.712Z",
-      "timestamp": "2026-06-18T11:18:03.785Z"
-    }
-  },
-  {
-    "time": 1781781485326,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:18:05.276Z",
-      "timestamp": "2026-06-18T11:18:05.326Z"
-    }
-  },
-  {
-    "time": 1781781485738,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:18:05.661Z",
-      "timestamp": "2026-06-18T11:18:05.738Z"
-    }
-  },
-  {
-    "time": 1781781487330,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:18:07.278Z",
-      "timestamp": "2026-06-18T11:18:07.330Z"
-    }
-  },
-  {
-    "time": 1781781487606,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:18:07.351Z",
-      "timestamp": "2026-06-18T11:18:07.606Z"
-    }
-  },
-  {
-    "time": 1781781489361,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:18:09.270Z",
-      "timestamp": "2026-06-18T11:18:09.361Z"
-    }
-  },
-  {
     "time": 1781781489409,
     "host": "browser-client",
     "source": "healthtwin-web-client",
@@ -18995,6 +18349,673 @@
       "severity": "Success",
       "_client_timestamp": "2026-06-19T05:45:20.010Z",
       "timestamp": "2026-06-19T05:45:20.065Z"
+    }
+  },
+  {
+    "time": 1781848711110,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "security_access",
+    "index": "healthtwin",
+    "event": {
+      "action": "onboarding_completed",
+      "age": 32,
+      "weight": 72,
+      "height": 175,
+      "bloodGroup": "O+",
+      "goals": [
+        "Heart Health",
+        "Longevity"
+      ],
+      "allergiesCount": 1,
+      "medicationsCount": 6,
+      "conditionsCount": 1,
+      "userEmail": "anonymous",
+      "userName": "Anonymous",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-19T05:58:31.043Z",
+      "timestamp": "2026-06-19T05:58:31.110Z"
+    }
+  },
+  {
+    "time": 1781848733831,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "location_services",
+    "index": "healthtwin",
+    "event": {
+      "action": "location_detected_via_api",
+      "lat": 16.596468,
+      "lng": 81.940895,
+      "city": "Machavaram",
+      "provider": "OpenStreetMap Nominatim (Fallback Geocode)",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Info",
+      "_client_timestamp": "2026-06-19T05:58:53.727Z",
+      "timestamp": "2026-06-19T05:58:53.831Z"
+    }
+  },
+  {
+    "time": 1781848733908,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "location_services",
+    "index": "healthtwin",
+    "event": {
+      "action": "location_detected_via_api",
+      "lat": 16.596468,
+      "lng": 81.940895,
+      "city": "Machavaram",
+      "provider": "OpenStreetMap Nominatim (Fallback Geocode)",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Info",
+      "_client_timestamp": "2026-06-19T05:58:53.739Z",
+      "timestamp": "2026-06-19T05:58:53.908Z"
+    }
+  },
+  {
+    "time": 1781848734900,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "location_services",
+    "index": "healthtwin",
+    "event": {
+      "action": "location_detected_via_api",
+      "lat": 16.596468,
+      "lng": 81.940895,
+      "city": "Machavaram",
+      "provider": "OpenStreetMap Nominatim (Fallback Geocode)",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Info",
+      "_client_timestamp": "2026-06-19T05:58:54.817Z",
+      "timestamp": "2026-06-19T05:58:54.900Z"
+    }
+  },
+  {
+    "time": 1781848776703,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "symptom_checker",
+    "index": "healthtwin",
+    "event": {
+      "action": "symptoms_analyzed_success",
+      "specialtyRecommended": "General Physician",
+      "urgency": "Routine visit",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-19T05:59:36.655Z",
+      "timestamp": "2026-06-19T05:59:36.703Z"
+    }
+  },
+  {
+    "time": 1781848808536,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "appointment_booking",
+    "index": "healthtwin",
+    "event": {
+      "action": "appointment_created",
+      "specialty": "General Physician",
+      "doctor": "Dr. Elena Rostova",
+      "hospital": "Machavaram General Hospital & ER",
+      "time": "2026-06-19T14:30:00",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-19T06:00:08.470Z",
+      "timestamp": "2026-06-19T06:00:08.536Z"
+    }
+  },
+  {
+    "time": 1781848830699,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "travel_assistant",
+    "index": "healthtwin",
+    "event": {
+      "action": "travel_advisory_generated",
+      "destination": "hyderabad",
+      "vaccinesRecommended": 3,
+      "hasCustomTips": true,
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-19T06:00:30.644Z",
+      "timestamp": "2026-06-19T06:00:30.699Z"
+    }
+  },
+  {
+    "time": 1781848862655,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "wellness_tracker",
+    "index": "healthtwin",
+    "event": {
+      "action": "wellness_log_saved",
+      "steps": 9500,
+      "waterMl": 2600,
+      "sleepHours": 8.1,
+      "mood": "Tired",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-19T06:01:02.592Z",
+      "timestamp": "2026-06-19T06:01:02.655Z"
+    }
+  },
+  {
+    "time": 1781848867745,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "wellness_tracker",
+    "index": "healthtwin",
+    "event": {
+      "action": "insights_generated_success",
+      "logsAnalyzed": 7,
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-19T06:01:07.557Z",
+      "timestamp": "2026-06-19T06:01:07.745Z"
+    }
+  },
+  {
+    "time": 1781848905648,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "location_services",
+    "index": "healthtwin",
+    "event": {
+      "action": "environmental_risks_calculated",
+      "aqi": 123,
+      "temp": 38,
+      "latitude": 17.0157,
+      "longitude": 82.2417,
+      "city": "Thimmapuram",
+      "provider": "OpenStreetMap Nominatim (Fallback Geocode)",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Warning",
+      "_client_timestamp": "2026-06-19T06:01:45.585Z",
+      "timestamp": "2026-06-19T06:01:45.648Z"
+    }
+  },
+  {
+    "time": 1781848949132,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "medicine_scan",
+    "index": "healthtwin",
+    "event": {
+      "action": "medicine_scanned",
+      "scanSource": "camera_upload",
+      "medicineName": "Levipil 500 Levetiracetam 500mg",
+      "generic": "Levetiracetam",
+      "category": "Anticonvulsant / Antiepileptic",
+      "safetyScore": 90,
+      "manufacturer": "Sun pharma laboratories ltd.",
+      "hasConflicts": false,
+      "conflictsCount": 0,
+      "conflictsDetails": [],
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-19T06:02:29.058Z",
+      "timestamp": "2026-06-19T06:02:29.132Z"
+    }
+  },
+  {
+    "time": 1781849009395,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "family_health",
+    "index": "healthtwin",
+    "event": {
+      "action": "family_member_added",
+      "relation": "Son",
+      "age": 26,
+      "conditionsCount": 1,
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-19T06:03:28.861Z",
+      "timestamp": "2026-06-19T06:03:29.395Z"
+    }
+  },
+  {
+    "time": 1781849038927,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "chat_interaction",
+    "index": "healthtwin",
+    "event": {
+      "action": "user_message_sent",
+      "contentLength": 70,
+      "language": "English",
+      "conversationLength": 2,
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Info",
+      "_client_timestamp": "2026-06-19T06:03:58.845Z",
+      "timestamp": "2026-06-19T06:03:58.927Z"
+    }
+  },
+  {
+    "time": 1781849043415,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "chat_interaction",
+    "index": "healthtwin",
+    "event": {
+      "action": "assistant_response_received",
+      "latencyMs": 4497,
+      "language": "English",
+      "status": "error",
+      "error": "Failed to get response",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "High",
+      "_client_timestamp": "2026-06-19T06:04:03.342Z",
+      "timestamp": "2026-06-19T06:04:03.415Z"
+    }
+  },
+  {
+    "time": 1781849060624,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "chat_interaction",
+    "index": "healthtwin",
+    "event": {
+      "action": "user_message_sent",
+      "contentLength": 22,
+      "language": "English",
+      "conversationLength": 4,
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Info",
+      "_client_timestamp": "2026-06-19T06:04:20.556Z",
+      "timestamp": "2026-06-19T06:04:20.624Z"
+    }
+  },
+  {
+    "time": 1781849061665,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "chat_interaction",
+    "index": "healthtwin",
+    "event": {
+      "action": "assistant_response_received",
+      "latencyMs": 1046,
+      "language": "English",
+      "status": "error",
+      "error": "Failed to get response",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "High",
+      "_client_timestamp": "2026-06-19T06:04:21.602Z",
+      "timestamp": "2026-06-19T06:04:21.665Z"
+    }
+  },
+  {
+    "time": 1781849166155,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "emergency_sos",
+    "index": "healthtwin",
+    "event": {
+      "action": "emergency_initiated",
+      "countdownSeconds": 5,
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Warning",
+      "_client_timestamp": "2026-06-19T06:06:06.095Z",
+      "timestamp": "2026-06-19T06:06:06.155Z"
+    }
+  },
+  {
+    "time": 1781849172121,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "emergency_sos",
+    "index": "healthtwin",
+    "event": {
+      "action": "emergency_location_resolved",
+      "lat": 19.076,
+      "lng": 72.8777,
+      "address": "Bandra Reclamation Rd, Bandra West, Mumbai, Maharashtra 400050",
+      "provider": "Default Location Fallback",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Info",
+      "_client_timestamp": "2026-06-19T06:06:12.064Z",
+      "timestamp": "2026-06-19T06:06:12.121Z"
+    }
+  },
+  {
+    "time": 1781849173619,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "emergency_sos",
+    "index": "healthtwin",
+    "event": {
+      "action": "emergency_location_resolved",
+      "lat": 16.5703629,
+      "lng": 81.9718865,
+      "address": "Bandarulanka, Sakuru, Amalapuram, Konaseema, Andhra Pradesh, 533221, India",
+      "provider": "OpenStreetMap Nominatim (Fallback Geocode)",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Info",
+      "_client_timestamp": "2026-06-19T06:06:13.529Z",
+      "timestamp": "2026-06-19T06:06:13.619Z"
+    }
+  },
+  {
+    "time": 1781849230357,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "emergency_sos",
+    "index": "healthtwin",
+    "event": {
+      "action": "emergency_location_resolved",
+      "lat": 16.596468,
+      "lng": 81.940895,
+      "address": "Ambajipeta - P. Gannavaram Road, Machavaram, Ambajipeta, Konaseema, Andhra Pradesh, 533214, India",
+      "provider": "OpenStreetMap Nominatim (Fallback Geocode)",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Info",
+      "_client_timestamp": "2026-06-19T06:07:10.252Z",
+      "timestamp": "2026-06-19T06:07:10.357Z"
+    }
+  },
+  {
+    "time": 1781849592337,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "chat_interaction",
+    "index": "healthtwin",
+    "event": {
+      "action": "user_message_sent",
+      "contentLength": 5,
+      "language": "English",
+      "conversationLength": 2,
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Info",
+      "_client_timestamp": "2026-06-19T06:13:11.724Z",
+      "timestamp": "2026-06-19T06:13:12.337Z"
+    }
+  },
+  {
+    "time": 1781849594845,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "chat_interaction",
+    "index": "healthtwin",
+    "event": {
+      "action": "assistant_response_received",
+      "latencyMs": 3044,
+      "language": "English",
+      "status": "error",
+      "error": "Failed to get response",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "High",
+      "_client_timestamp": "2026-06-19T06:13:14.768Z",
+      "timestamp": "2026-06-19T06:13:14.845Z"
+    }
+  },
+  {
+    "time": 1781850332868,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "chat_interaction",
+    "index": "healthtwin",
+    "event": {
+      "action": "user_message_sent",
+      "contentLength": 5,
+      "language": "English",
+      "conversationLength": 2,
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Info",
+      "_client_timestamp": "2026-06-19T06:25:32.683Z",
+      "timestamp": "2026-06-19T06:25:32.868Z"
+    }
+  },
+  {
+    "time": 1781850334664,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "chat_interaction",
+    "index": "healthtwin",
+    "event": {
+      "action": "assistant_response_received",
+      "latencyMs": 1940,
+      "language": "English",
+      "hasTranslation": false,
+      "contentLength": 401,
+      "status": "success",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-19T06:25:34.597Z",
+      "timestamp": "2026-06-19T06:25:34.664Z"
+    }
+  },
+  {
+    "time": 1781951787260,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "location_services",
+    "index": "healthtwin",
+    "event": {
+      "action": "location_detected_via_api",
+      "lat": 19.076,
+      "lng": 72.8777,
+      "city": "Mumbai",
+      "provider": "Default Location Fallback",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Info",
+      "_client_timestamp": "2026-06-20T10:36:27.096Z",
+      "timestamp": "2026-06-20T10:36:27.260Z"
+    }
+  },
+  {
+    "time": 1781951787314,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "location_services",
+    "index": "healthtwin",
+    "event": {
+      "action": "location_detected_via_api",
+      "lat": 19.076,
+      "lng": 72.8777,
+      "city": "Mumbai",
+      "provider": "Default Location Fallback",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Info",
+      "_client_timestamp": "2026-06-20T10:36:27.138Z",
+      "timestamp": "2026-06-20T10:36:27.314Z"
+    }
+  },
+  {
+    "time": 1781951796429,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "location_services",
+    "index": "healthtwin",
+    "event": {
+      "action": "location_detected_via_api",
+      "lat": 19.076,
+      "lng": 72.8777,
+      "city": "Mumbai",
+      "provider": "Default Location Fallback",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Info",
+      "_client_timestamp": "2026-06-20T10:36:36.398Z",
+      "timestamp": "2026-06-20T10:36:36.429Z"
+    }
+  },
+  {
+    "time": 1781951832602,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "symptom_checker",
+    "index": "healthtwin",
+    "event": {
+      "action": "symptoms_analyzed_success",
+      "specialtyRecommended": "General Physician",
+      "urgency": "Consult within 24 hours",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-20T10:37:12.559Z",
+      "timestamp": "2026-06-20T10:37:12.602Z"
+    }
+  },
+  {
+    "time": 1781951887036,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "travel_assistant",
+    "index": "healthtwin",
+    "event": {
+      "action": "travel_advisory_generated",
+      "destination": "Tokyo, Japan",
+      "vaccinesRecommended": 1,
+      "hasCustomTips": true,
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-20T10:38:06.987Z",
+      "timestamp": "2026-06-20T10:38:07.036Z"
+    }
+  },
+  {
+    "time": 1781951937116,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "wellness_tracker",
+    "index": "healthtwin",
+    "event": {
+      "action": "insights_generated_success",
+      "logsAnalyzed": 7,
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-20T10:38:57.028Z",
+      "timestamp": "2026-06-20T10:38:57.116Z"
+    }
+  },
+  {
+    "time": 1781952038918,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "location_services",
+    "index": "healthtwin",
+    "event": {
+      "action": "environmental_risks_calculated",
+      "aqi": 89,
+      "temp": 29,
+      "latitude": 19.076,
+      "longitude": 72.8777,
+      "city": "Mumbai",
+      "provider": "Default Location Fallback",
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-20T10:40:38.824Z",
+      "timestamp": "2026-06-20T10:40:38.918Z"
+    }
+  },
+  {
+    "time": 1781952111076,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "medicine_scan",
+    "index": "healthtwin",
+    "event": {
+      "action": "medicine_scanned",
+      "scanSource": "demo_mock",
+      "medicineName": "Lisinopril 10mg",
+      "generic": "Lisinopril",
+      "category": "ACE Inhibitor",
+      "safetyScore": 92,
+      "manufacturer": "Merck & Co.",
+      "hasConflicts": true,
+      "conflictsCount": 1,
+      "conflictsDetails": [
+        {
+          "severity": "Medium",
+          "description": "Aspirin may slightly decrease the blood pressure lowering effect of Lisinopril."
+        }
+      ],
+      "userEmail": "saiamruth347@gmail.com",
+      "userName": "saisrisuryaamruth damaraju",
+      "severity": "Warning",
+      "_client_timestamp": "2026-06-20T10:41:48.477Z",
+      "timestamp": "2026-06-20T10:41:51.076Z"
+    }
+  },
+  {
+    "time": 1781954303233,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "security_access",
+    "index": "healthtwin",
+    "event": {
+      "action": "onboarding_completed",
+      "age": 32,
+      "weight": 72,
+      "height": 175,
+      "bloodGroup": "O+",
+      "goals": [
+        "Heart Health",
+        "Longevity"
+      ],
+      "allergiesCount": 1,
+      "medicationsCount": 6,
+      "conditionsCount": 1,
+      "userEmail": "anonymous",
+      "userName": "Anonymous",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-20T11:18:22.962Z",
+      "timestamp": "2026-06-20T11:18:23.233Z"
+    }
+  },
+  {
+    "time": 1781954613741,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "security_access",
+    "index": "healthtwin",
+    "event": {
+      "action": "onboarding_completed",
+      "age": 32,
+      "weight": 72,
+      "height": 175,
+      "bloodGroup": "O+",
+      "goals": [
+        "Heart Health",
+        "Longevity"
+      ],
+      "allergiesCount": 1,
+      "medicationsCount": 6,
+      "conditionsCount": 1,
+      "userEmail": "anonymous",
+      "userName": "Anonymous",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-20T11:23:32.660Z",
+      "timestamp": "2026-06-20T11:23:33.741Z"
     }
   }
 ]

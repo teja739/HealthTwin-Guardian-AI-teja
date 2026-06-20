@@ -91,6 +91,7 @@ export default function ReportAnalyzer() {
   };
 
   const triggerSimulation = (template: ReportTemplate) => {
+    if (isAnalyzing) return;
     setIsAnalyzing(true);
     setSelectedReport(null);
     setTimeout(() => {

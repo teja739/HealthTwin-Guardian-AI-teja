@@ -37,9 +37,10 @@ interface DashboardProps {
     onboardingComplete: boolean;
   };
   onLogout: () => void;
+  isOffline?: boolean;
 }
 
-export default function Dashboard({ userProfile, onLogout }: DashboardProps) {
+export default function Dashboard({ userProfile, onLogout, isOffline }: DashboardProps) {
   const [activePage, setActivePage] = useState('home');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -198,7 +199,13 @@ export default function Dashboard({ userProfile, onLogout }: DashboardProps) {
             sidebarCollapsed && 'justify-center px-1.5'
           )}>
             <div className="shrink-0 flex items-center justify-center">
-              <UserButton appearance={{ elements: { avatarBox: "w-7 h-7" } }} />
+              {isOffline ? (
+                <div className="w-7 h-7 rounded-full bg-medical-blue/20 border border-medical-blue/30 flex items-center justify-center text-[10px] font-bold text-white uppercase shrink-0">
+                  {userProfile.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                </div>
+              ) : (
+                <UserButton appearance={{ elements: { avatarBox: "w-7 h-7" } }} />
+              )}
             </div>
             {!sidebarCollapsed && (
               <div className="flex-1 min-w-0">
