@@ -1,100 +1,5 @@
 [
   {
-    "time": 1781781540167,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:18:59.919Z",
-      "timestamp": "2026-06-18T11:19:00.167Z"
-    }
-  },
-  {
-    "time": 1781781540840,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:19:00.777Z",
-      "timestamp": "2026-06-18T11:19:00.840Z"
-    }
-  },
-  {
-    "time": 1781781542171,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:19:02.096Z",
-      "timestamp": "2026-06-18T11:19:02.171Z"
-    }
-  },
-  {
-    "time": 1781781542853,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:19:02.809Z",
-      "timestamp": "2026-06-18T11:19:02.853Z"
-    }
-  },
-  {
-    "time": 1781781543132,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:19:03.096Z",
-      "timestamp": "2026-06-18T11:19:03.132Z"
-    }
-  },
-  {
     "time": 1781781544573,
     "host": "browser-client",
     "source": "healthtwin-web-client",
@@ -19184,6 +19089,121 @@
       "severity": "Success",
       "_client_timestamp": "2026-06-22T10:47:20.685Z",
       "timestamp": "2026-06-22T10:47:20.881Z"
+    }
+  },
+  {
+    "time": 1782126542517,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "nutrition_twin",
+    "index": "healthtwin",
+    "event": {
+      "action": "food_image_scanned",
+      "fileName": "report 1.webp",
+      "detectedFood": "No identifiable food item in the provided image. The image displays a medical laboratory report.",
+      "calories": 0,
+      "protein": 0,
+      "carbs": 0,
+      "fat": 0,
+      "healthScore": 0,
+      "conflictsCount": 1,
+      "userEmail": "24h41a4514@bvcits.edu.in",
+      "userName": "DAMARAJU SAI SREE SURYA AMRUTH 24H41A4514",
+      "severity": "Critical",
+      "_client_timestamp": "2026-06-22T11:09:02.301Z",
+      "timestamp": "2026-06-22T11:09:02.517Z"
+    }
+  },
+  {
+    "time": 1782126581370,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "nutrition_twin",
+    "index": "healthtwin",
+    "event": {
+      "action": "food_image_scanned",
+      "fileName": "the-eatwell-plate-balanced-diet-nutrition.webp",
+      "detectedFood": "Diverse Nutrient-Rich Plate with Whole Grains, Legumes, Proteins, Fruits, and Vegetables",
+      "calories": 750,
+      "protein": 40,
+      "carbs": 120,
+      "fat": 25,
+      "healthScore": 92,
+      "conflictsCount": 2,
+      "userEmail": "24h41a4514@bvcits.edu.in",
+      "userName": "DAMARAJU SAI SREE SURYA AMRUTH 24H41A4514",
+      "severity": "Critical",
+      "_client_timestamp": "2026-06-22T11:09:41.292Z",
+      "timestamp": "2026-06-22T11:09:41.370Z"
+    }
+  },
+  {
+    "time": 1782126665401,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "nutrition_twin",
+    "index": "healthtwin",
+    "event": {
+      "action": "food_image_scanned",
+      "fileName": "rice.jpg",
+      "detectedFood": "Grilled Chicken Salad",
+      "calories": 420,
+      "protein": 38,
+      "carbs": 12,
+      "fat": 22,
+      "healthScore": 89,
+      "conflictsCount": 1,
+      "userEmail": "24h41a4514@bvcits.edu.in",
+      "userName": "DAMARAJU SAI SREE SURYA AMRUTH 24H41A4514",
+      "severity": "Critical",
+      "_client_timestamp": "2026-06-22T11:11:05.319Z",
+      "timestamp": "2026-06-22T11:11:05.401Z"
+    }
+  },
+  {
+    "time": 1782127107048,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "nutrition_twin",
+    "index": "healthtwin",
+    "event": {
+      "action": "food_image_scanned",
+      "fileName": "Zincovit.webp",
+      "detectedFood": "Zincovit Multivitamin and Multimineral Supplement with Grape Seed Extract",
+      "calories": 2,
+      "protein": 0,
+      "carbs": 0,
+      "fat": 0,
+      "healthScore": 75,
+      "conflictsCount": 2,
+      "userEmail": "24h41a4514@bvcits.edu.in",
+      "userName": "DAMARAJU SAI SREE SURYA AMRUTH 24H41A4514",
+      "severity": "Critical",
+      "_client_timestamp": "2026-06-22T11:18:26.832Z",
+      "timestamp": "2026-06-22T11:18:27.048Z"
+    }
+  },
+  {
+    "time": 1782127134557,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "nutrition_twin",
+    "index": "healthtwin",
+    "event": {
+      "action": "food_image_scanned",
+      "fileName": "rice.jpg",
+      "detectedFood": "Plain White Rice",
+      "calories": 305,
+      "protein": 6,
+      "carbs": 67,
+      "fat": 1,
+      "healthScore": 45,
+      "conflictsCount": 1,
+      "userEmail": "24h41a4514@bvcits.edu.in",
+      "userName": "DAMARAJU SAI SREE SURYA AMRUTH 24H41A4514",
+      "severity": "Critical",
+      "_client_timestamp": "2026-06-22T11:18:54.496Z",
+      "timestamp": "2026-06-22T11:18:54.557Z"
     }
   }
 ]

@@ -26,6 +26,7 @@ export default function NutritionTwin({ userProfile }: NutritionProps) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [scanResult, setScanResult] = useState<{
     foodName: string;
     calories: number;
@@ -64,7 +65,12 @@ export default function NutritionTwin({ userProfile }: NutritionProps) {
       const file = e.dataTransfer.files[0];
       const url = URL.createObjectURL(file);
       setSelectedImage(url);
-      runFoodScan(file.name);
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        runFoodScan(reader.result as string, file.type, file.name);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -73,70 +79,73 @@ export default function NutritionTwin({ userProfile }: NutritionProps) {
       const file = e.target.files[0];
       const url = URL.createObjectURL(file);
       setSelectedImage(url);
-      runFoodScan(file.name);
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        runFoodScan(reader.result as string, file.type, file.name);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const runFoodScan = (fileName: string) => {
+  const runFoodScan = async (base64Image: string, mimeType: string, fileName: string) => {
     setIsScanning(true);
     setScanResult(null);
+    setErrorMsg(null);
 
-    setTimeout(() => {
-      // Simulate OCR/Vision detection based on typical file keywords
-      const lowercase = fileName.toLowerCase();
-      let foodName = 'Healthy Grain Bowl & Chicken';
-      let calories = 580;
-      let protein = 42;
-      let carbs = 55;
-      let fat = 18;
-      let healthScore = 92;
-      let conflicts: string[] = [];
-
-      if (lowercase.includes('burger') || lowercase.includes('pizza') || lowercase.includes('junk')) {
-        foodName = 'Double Cheeseburger with Fries';
-        calories = 980;
-        protein = 32;
-        carbs = 95;
-        fat = 46;
-        healthScore = 48;
-        
-        // Check conflicts (e.g. Hypertension & high fat/sodium)
-        const hasHypertension = userProfile.conditions.some(c => c.toLowerCase().includes('hypertension'));
-        if (hasHypertension) {
-          conflicts.push('CRITICAL: High sodium (1450mg) exceeds Hypertension threshold.');
-        }
-      } else if (lowercase.includes('oat') || lowercase.includes('porridge') || lowercase.includes('egg')) {
-        foodName = 'Oatmeal with Blueberries & Scrambled Eggs';
-        calories = 420;
-        protein = 24;
-        carbs = 48;
-        fat = 12;
-        healthScore = 96;
-      }
-
-      // Check allergies
-      userProfile.allergies.forEach(allergy => {
-        if (foodName.toLowerCase().includes(allergy.toLowerCase())) {
-          conflicts.push(`ALLERGY SHIELD ACTIVE: Detected ${allergy} match!`);
-        }
+    try {
+      const response = await fetch('/api/scan-food', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image: base64Image,
+          mimeType,
+          userProfile,
+        }),
       });
 
-      setScanResult({ foodName, calories, protein, carbs, fat, healthScore, conflicts });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to scan food image');
+      }
+
+      const data = await response.json();
+      setScanResult({
+        foodName: data.foodName || 'Unknown Food',
+        calories: data.calories || 0,
+        protein: data.protein || 0,
+        carbs: data.carbs || 0,
+        fat: data.fat || 0,
+        healthScore: data.healthScore || 0,
+        conflicts: data.conflicts || [],
+      });
       setIsScanning(false);
 
       logToSplunk('nutrition_twin', {
         action: 'food_image_scanned',
         fileName,
-        detectedFood: foodName,
-        calories,
-        protein,
-        carbs,
-        fat,
-        healthScore,
-        conflictsCount: conflicts.length
-      }, { severity: conflicts.length > 0 ? 'Critical' : 'Success' });
+        detectedFood: data.foodName,
+        calories: data.calories,
+        protein: data.protein,
+        carbs: data.carbs,
+        fat: data.fat,
+        healthScore: data.healthScore,
+        conflictsCount: (data.conflicts || []).length
+      }, { severity: (data.conflicts || []).length > 0 ? 'Critical' : 'Success' });
 
-    }, 1200);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'An error occurred while scanning the food image.');
+      setIsScanning(false);
+
+      logToSplunk('nutrition_twin', {
+        action: 'food_scan_failed',
+        fileName,
+        error: err.message || String(err)
+      }, { severity: 'High' });
+    }
   };
 
   const generateMealPlan = () => {
@@ -268,40 +277,66 @@ export default function NutritionTwin({ userProfile }: NutritionProps) {
               <Upload className="w-4 h-4 text-medical-blue" /> Upload Meal Photo
             </h3>
 
-            {/* Drag & Drop Box */}
-            <div
-              onDragEnter={handleDrag}
-              onDragOver={handleDrag}
-              onDragLeave={handleDrag}
-              onDrop={handleDrop}
-              className={cn(
-                "border-2 border-dashed rounded-xl p-8 text-center transition flex flex-col items-center justify-center cursor-pointer",
-                dragActive ? "border-medical-blue bg-medical-blue/5" : "border-white/10 bg-white/2 hover:border-white/20"
-              )}
-            >
-              <input
-                id="file-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center justify-center gap-2.5">
-                <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">
-                  <Upload className="w-5 h-5" />
+            {/* Drag & Drop Box or Image Preview */}
+            {selectedImage ? (
+              <div className="relative rounded-xl overflow-hidden aspect-video border border-white/10 bg-black/40 flex items-center justify-center group">
+                <img src={selectedImage} alt="Selected meal" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2">
+                  <label htmlFor="file-upload" className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-semibold text-white cursor-pointer transition">
+                    Upload Different Photo
+                  </label>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-white">Drag & drop or Click to upload</p>
-                  <p className="text-[9px] text-slate-500 mt-0.5">Supports PNG, JPG, WebP</p>
-                </div>
-              </label>
-            </div>
+              </div>
+            ) : (
+              <div
+                onDragEnter={handleDrag}
+                onDragOver={handleDrag}
+                onDragLeave={handleDrag}
+                onDrop={handleDrop}
+                className={cn(
+                  "border-2 border-dashed rounded-xl p-8 text-center transition flex flex-col items-center justify-center cursor-pointer",
+                  dragActive ? "border-medical-blue bg-medical-blue/5" : "border-white/10 bg-white/2 hover:border-white/20"
+                )}
+              >
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center justify-center gap-2.5">
+                  <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">
+                    <Upload className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">Drag & drop or Click to upload</p>
+                    <p className="text-[9px] text-slate-500 mt-0.5">Supports PNG, JPG, WebP</p>
+                  </div>
+                </label>
+              </div>
+            )}
 
             {/* Scanning loader */}
             {isScanning && (
               <div className="flex items-center justify-center gap-2 text-xs text-slate-400 py-6">
                 <span className="w-4 h-4 rounded-full border-2 border-white/20 border-t-medical-blue animate-spin" />
                 <span>Running Nutrition Vision OCR...</span>
+              </div>
+            )}
+
+            {/* Error Message */}
+            {errorMsg && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[11px] text-rose-400 flex items-start gap-2 leading-relaxed">
+                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{errorMsg}</span>
               </div>
             )}
 

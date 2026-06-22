@@ -49,36 +49,29 @@ export async function POST(req: Request) {
 - Active Medications: ${medications}`;
     }
 
-    const prompt = `Analyze this medicine package image. Identify the medicine name, strength, generic/active ingredients, manufacturer, form (e.g. tablet, capsule, liquid), purpose, typical dosage, side effects, and generic drug interactions.
+    const prompt = `Analyze this food image. Identify the primary food item(s) present, estimate the calories (in kcal), protein (in grams), carbs (in grams), and fat (in grams). Also calculate a health score out of 100 representing its overall nutritional value.
     
     Then, evaluate potential conflicts specifically against this user profile:
     ${profileContext}
     
     CRITICAL EVALUATION RULES:
-    1. If the user's allergies include the active ingredient or related compounds of this medicine, flag a "High" severity conflict.
-    2. If the user takes any active medications that have moderate or severe drug-to-drug interactions with this medicine, flag a "High" or "Medium" severity conflict.
-    3. If the user has any existing conditions that are contraindicated for this medicine (e.g. taking decongestants with high blood pressure), flag a conflict.
+    1. If the food contains ingredients matching any of the user's allergies (e.g. peanuts, dairy, wheat/gluten, shellfish), flag a conflict item starting with "ALLERGY ALERT: ".
+    2. If the user has Hypertension and the food contains high sodium/saturated fats, flag a conflict.
+    3. If the user has Diabetes and the food is high in simple sugars or high glycemic carbs, flag a conflict.
+    4. If there are any potential food-drug interactions with the user's active medications, flag a conflict.
     
     Your response MUST be valid JSON matching the following schema. Return only the raw JSON, no markdown code block wraps.
     
     JSON Schema:
     {
-      "name": "Medicine Name & Strength (e.g. Tylenol Extra Strength 500mg)",
-      "generic": "Active ingredient (e.g. Acetaminophen)",
-      "category": "Drug class/category (e.g. Analgesic / Antipyretic)",
-      "purpose": "Brief description of what this medicine is used for",
-      "dosage": "Typical standard dosage instructions (e.g. 1 tablet every 4-6 hours as needed)",
-      "sideEffects": ["list of common side effects"],
-      "interactions": ["list of key general drug/food interactions"],
-      "prescriptionRequired": false, // true or false
-      "safetyScore": 85, // integer out of 100 representing suitability for this specific user
-      "manufacturer": "Manufacturer name",
-      "form": "Tablet / Capsule / Liquid / Cream",
-      "profileConflicts": [
-        {
-          "severity": "High", // "High" or "Medium"
-          "description": "Allergy warning: This medicine contains Penicillin which conflicts with your allergy."
-        }
+      "foodName": "Identified Food Name (e.g. Grilled Salmon Salad with Quinoa)",
+      "calories": 450,
+      "protein": 35,
+      "carbs": 25,
+      "fat": 18,
+      "healthScore": 88,
+      "conflicts": [
+        "Description of conflict (e.g., 'ALLERGY ALERT: Detected cheese which matches your dairy allergy')"
       ]
     }`;
 
@@ -103,39 +96,19 @@ export async function POST(req: Request) {
         responseSchema: {
           type: "OBJECT",
           properties: {
-            name: { type: "STRING" },
-            generic: { type: "STRING" },
-            category: { type: "STRING" },
-            purpose: { type: "STRING" },
-            dosage: { type: "STRING" },
-            sideEffects: {
+            foodName: { type: "STRING" },
+            calories: { type: "INTEGER" },
+            protein: { type: "INTEGER" },
+            carbs: { type: "INTEGER" },
+            fat: { type: "INTEGER" },
+            healthScore: { type: "INTEGER" },
+            conflicts: {
               type: "ARRAY",
               items: { type: "STRING" }
-            },
-            interactions: {
-              type: "ARRAY",
-              items: { type: "STRING" }
-            },
-            prescriptionRequired: { type: "BOOLEAN" },
-            safetyScore: { type: "INTEGER" },
-            manufacturer: { type: "STRING" },
-            form: { type: "STRING" },
-            profileConflicts: {
-              type: "ARRAY",
-              items: {
-                type: "OBJECT",
-                properties: {
-                  severity: { type: "STRING" },
-                  description: { type: "STRING" }
-                },
-                required: ["severity", "description"]
-              }
             }
           },
           required: [
-            "name", "generic", "category", "purpose", "dosage", 
-            "sideEffects", "interactions", "prescriptionRequired", 
-            "safetyScore", "manufacturer", "form", "profileConflicts"
+            "foodName", "calories", "protein", "carbs", "fat", "healthScore", "conflicts"
           ]
         }
       }
@@ -180,34 +153,45 @@ export async function POST(req: Request) {
     return NextResponse.json(parsed);
 
   } catch (error: any) {
-    console.error('Error in scan API route, returning fallback content:', error);
+    console.error('Error in scan-food API route, returning fallback content:', error);
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const errorLogPath = path.join(process.cwd(), 'scan_error.log');
+      fs.writeFileSync(errorLogPath, `${new Date().toISOString()}\nError: ${error.message || error}\nStack: ${error.stack || ''}\n\n`, { flag: 'a' });
+    } catch (logErr) {
+      console.error('Failed to write error to scan_error.log', logErr);
+    }
     
-    const mockScanResponse = {
-      name: "Amoxicillin 500mg Capsule",
-      generic: "Amoxicillin Trihydrate",
-      category: "Beta-lactam Antibiotic",
-      purpose: "Treats bacterial infections of the middle ear, tonsils, throat, and respiratory tract.",
-      dosage: "Take 1 capsule (500mg) every 8 hours for 7-10 days as directed.",
-      sideEffects: ["Nausea", "Diarrhea", "Mild skin rash", "Abdominal discomfort"],
-      interactions: ["Probenecid", "Oral contraceptives", "Methotrexate"],
-      prescriptionRequired: true,
-      safetyScore: 92,
-      manufacturer: "Aurobindo Pharma Limited",
-      form: "Capsule",
-      profileConflicts: [] as any[]
+    // Fallback response in case of API failure or missing keys
+    const mockFoodResponse = {
+      foodName: "Grilled Chicken Salad",
+      calories: 420,
+      protein: 38,
+      carbs: 12,
+      fat: 22,
+      healthScore: 89,
+      conflicts: [] as string[]
     };
 
-    const allergies = userProfile && Array.isArray(userProfile.allergies) 
-      ? userProfile.allergies.map((a: string) => a.toLowerCase())
-      : [];
-    if (allergies.some((a: string) => a.includes('penicillin') || a.includes('amoxicillin') || a.includes('beta-lactam') || a.includes('sulfa'))) {
-      mockScanResponse.profileConflicts.push({
-        severity: "High",
-        description: "Allergy Alert: This medication belongs to the penicillin class. You have a registered penicillin allergy."
-      });
-      mockScanResponse.safetyScore = 15;
+    // Evaluate basic conflicts in code as a fallback mechanism
+    if (userProfile) {
+      const allergies = Array.isArray(userProfile.allergies) 
+        ? userProfile.allergies.map((a: string) => a.toLowerCase())
+        : [];
+      const conditions = Array.isArray(userProfile.conditions)
+        ? userProfile.conditions.map((c: string) => c.toLowerCase())
+        : [];
+
+      if (allergies.some((a: string) => a.includes('chicken') || a.includes('poultry'))) {
+        mockFoodResponse.conflicts.push("ALLERGY ALERT: Food contains chicken which matches your poultry allergy.");
+        mockFoodResponse.healthScore = 20;
+      }
+      if (conditions.some((c: string) => c.includes('hypertension')) && mockFoodResponse.fat > 20) {
+        mockFoodResponse.conflicts.push("HEALTH ALERT: High fat content is not recommended for Hypertension.");
+      }
     }
 
-    return NextResponse.json(mockScanResponse);
+    return NextResponse.json(mockFoodResponse);
   }
 }
