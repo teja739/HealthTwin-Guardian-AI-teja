@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Target, Activity, Brain, FileText,
   Scan, Shield, Users, Globe, AlertTriangle, LogOut,
   ChevronLeft, ChevronRight, Menu, X, Database,
-  Calendar, Plane, Heart, Smile
+  Calendar, Plane, Heart, Smile, Clock, Utensils, FolderLock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserButton } from '@clerk/nextjs';
@@ -25,6 +25,10 @@ import SplunkDashboard from './pages/SplunkDashboard';
 import Appointments from './pages/Appointments';
 import TravelAssistant from './pages/TravelAssistant';
 import WellnessTracker from './pages/WellnessTracker';
+import TimeMachine from './pages/TimeMachine';
+import MentalHealth from './pages/MentalHealth';
+import NutritionTwin from './pages/NutritionTwin';
+import HealthVault from './pages/HealthVault';
 
 interface DashboardProps {
   userProfile: {
@@ -48,9 +52,13 @@ export default function Dashboard({ userProfile, onLogout, isOffline }: Dashboar
 
   const navItems = [
     { id: 'home', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'timemachine', label: 'Health Time Machine', icon: Clock },
+    { id: 'mentalhealth', label: 'Emotion Twin', icon: Heart },
+    { id: 'nutrition', label: 'Nutrition Twin', icon: Utensils },
+    { id: 'vault', label: 'Health Vault', icon: FolderLock },
     { id: 'appointments', label: 'Book Appointments', icon: Calendar },
     { id: 'travel', label: 'Travel Assistant', icon: Plane },
-    { id: 'wellness', label: 'Wellness Tracker', icon: Heart },
+    { id: 'wellness', label: 'Wellness Tracker', icon: Activity },
     { id: 'bodymap', label: 'Body Risk Map', icon: Activity },
     { id: 'scanner', label: 'Medicine Scanner', icon: Scan },
     { id: 'safety', label: 'Safety Center', icon: Shield },
@@ -65,13 +73,17 @@ export default function Dashboard({ userProfile, onLogout, isOffline }: Dashboar
   const renderPage = () => {
     switch (activePage) {
       case 'home': return <Home userProfile={userProfile} />;
+      case 'timemachine': return <TimeMachine userProfile={userProfile} />;
+      case 'mentalhealth': return <MentalHealth userProfile={userProfile} />;
+      case 'nutrition': return <NutritionTwin userProfile={userProfile} />;
+      case 'vault': return <HealthVault />;
       case 'appointments': return <Appointments userProfile={userProfile} />;
       case 'travel': return <TravelAssistant userProfile={userProfile} />;
       case 'wellness': return <WellnessTracker userProfile={userProfile} />;
       case 'mission': return <MissionControl />;
       case 'bodymap': return <BodyMap userProfile={userProfile} />;
       case 'agents': return <AgentSwarm />;
-      case 'reports': return <ReportAnalyzer />;
+      case 'reports': return <ReportAnalyzer userProfile={userProfile} />;
       case 'scanner': return <MedicineScanner userProfile={userProfile} />;
       case 'safety': return <SafetyCenter />;
       case 'family': return <FamilyHealth userProfile={userProfile} />;

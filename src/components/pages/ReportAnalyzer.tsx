@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, Upload, CheckCircle, AlertTriangle, 
@@ -26,10 +26,24 @@ interface ReportTemplate {
   recs: string[];
 }
 
-export default function ReportAnalyzer() {
+interface ReportAnalyzerProps {
+  userProfile?: {
+    name: string;
+    email: string;
+    bloodGroup: string;
+    allergies: string[];
+    medications: string[];
+    conditions: string[];
+    onboardingComplete: boolean;
+  };
+}
+
+export default function ReportAnalyzer({ userProfile }: ReportAnalyzerProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [selectedReport, setSelectedReport] = useState<ReportTemplate | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const reportTemplates: ReportTemplate[] = [
     {
@@ -79,14 +93,66 @@ export default function ReportAnalyzer() {
     }
   };
 
+  const handleFileUpload = async (file: File) => {
+    if (isAnalyzing) return;
+    setIsAnalyzing(true);
+    setSelectedReport(null);
+    setErrorMsg(null);
+
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const base64 = reader.result as string;
+
+          const response = await fetch('/api/analyze-report', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              file: base64,
+              mimeType: file.type,
+              fileName: file.name,
+              userProfile,
+            }),
+          });
+
+          if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.error || 'Failed to analyze report');
+          }
+
+          const data = await response.json();
+          setSelectedReport(data);
+          setIsAnalyzing(false);
+        } catch (err: any) {
+          console.error(err);
+          setErrorMsg(err.message || 'An error occurred while analyzing the report document.');
+          setIsAnalyzing(false);
+        }
+      };
+
+      reader.onerror = () => {
+        setErrorMsg('Failed to read report file');
+        setIsAnalyzing(false);
+      };
+
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'An error occurred while uploading the report.');
+      setIsAnalyzing(false);
+    }
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      // Trigger simulate analysis on first template
-      triggerSimulation(reportTemplates[0]);
+      handleFileUpload(e.dataTransfer.files[0]);
     }
   };
 
@@ -94,24 +160,11 @@ export default function ReportAnalyzer() {
     if (isAnalyzing) return;
     setIsAnalyzing(true);
     setSelectedReport(null);
+    setErrorMsg(null);
     setTimeout(() => {
       setSelectedReport(template);
       setIsAnalyzing(false);
     }, 2000);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Normal':
-        return 'text-emerald-400';
-      case 'Borderline':
-        return 'text-amber-400';
-      case 'High':
-      case 'Low':
-        return 'text-rose-500 font-bold';
-      default:
-        return 'text-slate-400';
-    }
   };
 
   const getStatusBg = (status: string) => {
@@ -150,8 +203,15 @@ export default function ReportAnalyzer() {
                 ? 'border-medical-blue bg-medical-blue/5 scale-[0.99]' 
                 : 'border-white/10 bg-white/2 hover:border-white/20'
             )}
-            onClick={() => triggerSimulation(reportTemplates[0])}
+            onClick={() => fileInputRef.current?.click()}
           >
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])} 
+              accept="image/*,application/pdf" 
+              className="hidden" 
+            />
             <Upload className="w-8 h-8 text-medical-blue mb-2.5" />
             <p className="text-xs font-semibold text-white">Drag & drop files here, or click to browse</p>
             <p className="text-[10px] text-slate-500 mt-1">Files analyzed locally. HIPAA compliant encrypted transmission.</p>
@@ -208,7 +268,7 @@ export default function ReportAnalyzer() {
                 <Sparkles className="w-4 h-4 text-medical-teal absolute -top-1 -right-1 animate-pulse" />
               </div>
               <div>
-                <h4 className="font-display font-bold text-white text-sm">Parsing Medical PDF</h4>
+                <h4 className="font-display font-bold text-white text-sm">Parsing Medical Document</h4>
                 <p className="text-xs text-slate-400 mt-1 max-w-xs leading-relaxed">
                   Executing Google Vision OCR. Extracting tabular biomarkers. Triggering Cardiac and Blood Report AI agents...
                 </p>
@@ -216,7 +276,31 @@ export default function ReportAnalyzer() {
             </motion.div>
           )}
 
-          {!isAnalyzing && !selectedReport && (
+          {errorMsg && (
+            <motion.div 
+              key="error"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="glass-panel p-6 rounded-2xl h-full flex flex-col items-center justify-center text-center space-y-4 border-rose-500/25 bg-rose-950/5"
+            >
+              <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-500">
+                <AlertTriangle className="w-8 h-8" />
+              </div>
+              <div>
+                <h4 className="font-display font-bold text-white text-sm">Analysis Failed</h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">{errorMsg}</p>
+              </div>
+              <button 
+                onClick={() => setErrorMsg(null)}
+                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-semibold text-white hover:bg-white/10 transition"
+              >
+                Try Again
+              </button>
+            </motion.div>
+          )}
+
+          {!isAnalyzing && !errorMsg && !selectedReport && (
             <motion.div 
               key="empty"
               initial={{ opacity: 0 }}
@@ -230,13 +314,13 @@ export default function ReportAnalyzer() {
               <div>
                 <h4 className="font-display font-bold text-white text-sm">No Report Loaded</h4>
                 <p className="text-xs text-slate-400 mt-1 max-w-xs leading-relaxed">
-                  Drag in your PDF files or select one of the templates on the left to extract health biomarkers.
+                  Drag in your PDF/images files or select one of the templates on the left to extract health biomarkers.
                 </p>
               </div>
             </motion.div>
           )}
 
-          {!isAnalyzing && selectedReport && (
+          {!isAnalyzing && !errorMsg && selectedReport && (
             <motion.div 
               key="results"
               initial={{ opacity: 0 }}

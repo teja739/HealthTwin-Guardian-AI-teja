@@ -4,10 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   AlertTriangle, Phone, Download, Share2, QrCode, 
-  Heart, Pill, ShieldAlert, User, Clock, X, MapPin, Navigation
+  Heart, Pill, ShieldAlert, User, Clock, X, MapPin, Navigation,
+  Activity, ShieldCheck, Settings, Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logToSplunk } from '@/lib/splunk-client';
+import rawHospitals from '@/lib/hospitals_india.json';
 
 interface EmergencyProps {
   userProfile: {
@@ -27,6 +29,15 @@ export default function EmergencyMode({ userProfile }: EmergencyProps) {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
+
+  // Smart Emergency Prediction Vitals State
+  const [vitals, setVitals] = useState({
+    heartRate: 108,
+    oxygenLevel: 92,
+    bloodPressure: '145/95'
+  });
+
+  const [filterCategory, setFilterCategory] = useState<'Hospitals' | 'Pharmacies' | 'Blood Banks'>('Hospitals');
 
   const emergencyContacts = [
     { name: 'Dr. Sarah Mitchell', role: 'Primary Physician', phone: '+1 (555) 0142' },
@@ -218,6 +229,45 @@ HIPAA COMPLIANT · ENCRYPTED TELEMETRY
     }, { severity: 'Success' });
   };
 
+  // Smart prediction calculations
+  const isHypoxia = vitals.oxygenLevel < 93;
+  const isTachycardia = vitals.heartRate > 100;
+  const systolic = parseInt(vitals.bloodPressure.split('/')[0]) || 120;
+  const isHypertensive = systolic > 140;
+  const hasPredictionAlert = isHypoxia || isTachycardia || isHypertensive;
+
+  // Hospital Matchmaker logic
+  const activeCity = address && !locating 
+    ? (address.includes('Chennai') ? 'Chennai' : address.includes('Mumbai') ? 'Mumbai' : address.includes('Hosur') ? 'Hosur' : 'Chennai') 
+    : 'Chennai';
+
+  const matchedHospitals = rawHospitals
+    .filter((h: any) => h.city.toLowerCase() === activeCity.toLowerCase())
+    .slice(0, 5)
+    .map((h: any) => {
+      let relevance = 'General Medical';
+      let isMatch = false;
+      
+      const isCardio = userProfile.conditions.some(c => c.toLowerCase().includes('hypertension') || c.toLowerCase().includes('blood pressure') || c.toLowerCase().includes('heart'));
+      const isMetabolic = userProfile.conditions.some(c => c.toLowerCase().includes('diabetes'));
+      
+      if (isCardio && (h.name.toLowerCase().includes('heart') || h.name.toLowerCase().includes('cardio') || h.name.toLowerCase().includes('general') || h.name.toLowerCase().includes('care'))) {
+        relevance = 'Cardiology Specialty (Perfect Match)';
+        isMatch = true;
+      } else if (isMetabolic && (h.name.toLowerCase().includes('diabetes') || h.name.toLowerCase().includes('endocrine') || h.name.toLowerCase().includes('general'))) {
+        relevance = 'Metabolic Specialty (Perfect Match)';
+        isMatch = true;
+      }
+      
+      return {
+        ...h,
+        relevance,
+        isMatch,
+        distance: (Math.random() * 3 + 0.8).toFixed(1) + ' km',
+        waitTime: Math.floor(Math.random() * 25 + 5) + ' mins wait'
+      };
+    });
+
   return (
     <div className="space-y-6">
       <AnimatePresence mode="wait">
@@ -227,71 +277,223 @@ HIPAA COMPLIANT · ENCRYPTED TELEMETRY
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="space-y-6"
+            className="grid grid-cols-1 lg:grid-cols-5 gap-6"
           >
-            {/* Activation Panel */}
-            <div className="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center text-center relative overflow-hidden min-h-[350px]">
-              <div className="absolute inset-0 bg-gradient-to-b from-rose-950/20 to-transparent pointer-events-none" />
-              
-              <div className="relative z-10 space-y-6">
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-display font-extrabold text-white">Emergency Mode</h2>
-                  <p className="text-sm text-slate-400 max-w-md">
-                    Activating emergency mode will generate your critical health card, alert emergency contacts, and prepare your medical data for first responders.
+            {/* Left: SOS Panel, Contacts, and Card Preview */}
+            <div className="lg:col-span-3 space-y-6">
+              {/* Activation Panel */}
+              <div className="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center text-center relative overflow-hidden min-h-[320px]">
+                <div className="absolute inset-0 bg-gradient-to-b from-rose-950/20 to-transparent pointer-events-none" />
+                
+                <div className="relative z-10 space-y-6">
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-display font-extrabold text-white">Emergency Mode</h2>
+                    <p className="text-sm text-slate-400 max-w-md">
+                      Activating emergency mode will generate your critical health card, alert emergency contacts, and prepare your medical data for first responders.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleActivate}
+                    className="relative group"
+                  >
+                    <div className="absolute inset-0 rounded-full bg-rose-500/20 animate-ping" style={{ animationDuration: '2s' }} />
+                    <div className="absolute inset-[-8px] rounded-full bg-rose-500/10 animate-pulse" />
+                    <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-rose-600 to-rose-700 border-4 border-rose-500/50 flex items-center justify-center shadow-[0_0_60px_rgba(244,63,94,0.4)] group-hover:shadow-[0_0_80px_rgba(244,63,94,0.6)] transition-all duration-300 group-hover:scale-105 cursor-pointer">
+                      <div className="text-center">
+                        <ShieldAlert className="w-10 h-10 text-white mx-auto mb-1" />
+                        <span className="text-xs font-bold text-rose-200 uppercase tracking-wider">SOS</span>
+                      </div>
+                    </div>
+                  </button>
+
+                  <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+                    Press the SOS button to activate. A 5-second countdown will begin before emergency alerts are sent.
                   </p>
                 </div>
+              </div>
 
-                <button
-                  onClick={handleActivate}
-                  className="relative group"
-                >
-                  <div className="absolute inset-0 rounded-full bg-rose-500/20 animate-ping" style={{ animationDuration: '2s' }} />
-                  <div className="absolute inset-[-8px] rounded-full bg-rose-500/10 animate-pulse" />
-                  <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-rose-600 to-rose-700 border-4 border-rose-500/50 flex items-center justify-center shadow-[0_0_60px_rgba(244,63,94,0.4)] group-hover:shadow-[0_0_80px_rgba(244,63,94,0.6)] transition-all duration-300 group-hover:scale-105 cursor-pointer">
-                    <div className="text-center">
-                      <ShieldAlert className="w-10 h-10 text-white mx-auto mb-1" />
-                      <span className="text-xs font-bold text-rose-200 uppercase tracking-wider">SOS</span>
+              {/* Emergency Contacts Preview */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {emergencyContacts.map((contact, idx) => (
+                  <div key={idx} className="glass-panel p-4 rounded-2xl flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-rose-500">
+                      <Phone className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-white">{contact.name}</h4>
+                      <p className="text-[10px] text-slate-500">{contact.role} · {contact.phone}</p>
                     </div>
                   </div>
-                </button>
+                ))}
+              </div>
 
-                <p className="text-[11px] text-slate-500 max-w-xs">
-                  Press the SOS button to activate. A 5-second countdown will begin before emergency alerts are sent.
-                </p>
+              {/* Pre-configured Health Card Preview */}
+              <div className="glass-panel p-6 rounded-2xl space-y-4">
+                <h3 className="text-sm font-display font-bold text-white uppercase tracking-wider">Emergency Health Card Preview</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { icon: User, label: 'Patient', val: userProfile.name },
+                    { icon: Heart, label: 'Blood Group', val: userProfile.bloodGroup },
+                    { icon: AlertTriangle, label: 'Allergies', val: userProfile.allergies.join(', ') || 'None' },
+                    { icon: Pill, label: 'Medications', val: `${userProfile.medications.length} active` }
+                  ].map((item, i) => (
+                    <div key={i} className="bg-white/3 border border-white/5 p-3 rounded-xl text-xs">
+                      <item.icon className="w-4 h-4 text-rose-500 mb-1" />
+                      <p className="text-[10px] text-slate-500">{item.label}</p>
+                      <p className="text-xs font-semibold text-white mt-0.5">{item.val}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Emergency Contacts Preview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {emergencyContacts.map((contact, idx) => (
-                <div key={idx} className="glass-panel p-4 rounded-2xl flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-rose-500">
-                    <Phone className="w-4 h-4" />
+            {/* Right: Smart Prediction & Location Intelligence */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Smart Emergency Prediction */}
+              <div className="glass-panel p-5 rounded-2xl space-y-4">
+                <h3 className="text-xs font-display font-bold text-white uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-white/5">
+                  <Activity className="w-4 h-4 text-rose-500 animate-pulse" /> Smart Emergency Prediction
+                </h3>
+
+                <div className="space-y-3.5">
+                  {/* Slider 1: Heart Rate */}
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between text-[10px] text-slate-400">
+                      <span>Heart Rate</span>
+                      <span className={cn("font-bold", vitals.heartRate > 100 ? "text-rose-400" : "text-slate-200")}>{vitals.heartRate} bpm</span>
+                    </div>
+                    <input 
+                      type="range" min="60" max="140" value={vitals.heartRate}
+                      onChange={(e) => setVitals(prev => ({ ...prev, heartRate: parseInt(e.target.value) }))}
+                      className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                    />
                   </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-white">{contact.name}</h4>
-                    <p className="text-[10px] text-slate-500">{contact.role} · {contact.phone}</p>
+
+                  {/* Slider 2: SpO2 */}
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between text-[10px] text-slate-400">
+                      <span>Blood Oxygen (SpO2)</span>
+                      <span className={cn("font-bold", vitals.oxygenLevel < 93 ? "text-rose-400" : "text-slate-200")}>{vitals.oxygenLevel}%</span>
+                    </div>
+                    <input 
+                      type="range" min="85" max="100" value={vitals.oxygenLevel}
+                      onChange={(e) => setVitals(prev => ({ ...prev, oxygenLevel: parseInt(e.target.value) }))}
+                      className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                    />
+                  </div>
+
+                  {/* Slider 3: Blood Pressure */}
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between text-[10px] text-slate-400">
+                      <span>Systolic Blood Pressure</span>
+                      <span className={cn("font-bold", systolic > 140 ? "text-rose-400" : "text-slate-200")}>{vitals.bloodPressure} mmHg</span>
+                    </div>
+                    <input 
+                      type="range" min="110" max="170" value={systolic}
+                      onChange={(e) => setVitals(prev => ({ ...prev, bloodPressure: `${e.target.value}/${parseInt(prev.bloodPressure.split('/')[1]) || 80}` }))}
+                      className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
 
-            {/* Pre-configured Health Card Preview */}
-            <div className="glass-panel p-6 rounded-2xl space-y-4">
-              <h3 className="text-sm font-display font-bold text-white uppercase tracking-wider">Emergency Health Card Preview</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {[
-                  { icon: User, label: 'Patient', val: userProfile.name },
-                  { icon: Heart, label: 'Blood Group', val: userProfile.bloodGroup },
-                  { icon: AlertTriangle, label: 'Allergies', val: userProfile.allergies.join(', ') || 'None' },
-                  { icon: Pill, label: 'Medications', val: `${userProfile.medications.length} active` }
-                ].map((item, i) => (
-                  <div key={i} className="bg-white/3 border border-white/5 p-3 rounded-xl">
-                    <item.icon className="w-4 h-4 text-rose-500 mb-1" />
-                    <p className="text-[10px] text-slate-500">{item.label}</p>
-                    <p className="text-xs font-semibold text-white mt-0.5">{item.val}</p>
+                {/* Warning Notification Banner */}
+                {hasPredictionAlert ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[11px] text-rose-400 space-y-1.5 leading-relaxed"
+                  >
+                    <div className="flex items-center gap-1.5 font-bold">
+                      <AlertTriangle className="w-4 h-4 animate-bounce" />
+                      <span>Potential Health Risk Detected</span>
+                    </div>
+                    <p className="italic">
+                      "Potential health risk detected. Consider contacting a doctor." SpO2 is sub-optimal ({vitals.oxygenLevel}%) or BP is elevated ({vitals.bloodPressure}).
+                    </p>
+                  </motion.div>
+                ) : (
+                  <div className="p-3 bg-emerald-500/5 border border-emerald-500/15 rounded-xl text-[11px] text-emerald-400 flex items-center gap-1.5 font-semibold">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>All dynamic telemetry indexes are stable.</span>
                   </div>
-                ))}
+                )}
+              </div>
+
+              {/* Location-Aware Hospital Matchmaker */}
+              <div className="glass-panel p-5 rounded-2xl space-y-4">
+                <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                  <h3 className="text-xs font-display font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <MapPin className="w-4 h-4 text-medical-teal animate-bounce" /> Hospital Matchmaker
+                  </h3>
+                  
+                  {/* Category switcher */}
+                  <div className="flex gap-1 bg-white/5 p-0.5 rounded-lg border border-white/5">
+                    {(['Hospitals', 'Pharmacies', 'Blood Banks'] as const).map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setFilterCategory(cat)}
+                        className={cn(
+                          "px-2 py-1 text-[9px] font-bold rounded transition",
+                          filterCategory === cat ? 'bg-medical-teal/20 text-medical-teal border border-medical-teal/20' : 'text-slate-400'
+                        )}
+                      >
+                        {cat.split(' ')[0]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
+                  {filterCategory === 'Hospitals' && matchedHospitals.map((h: any, idx: number) => (
+                    <div key={idx} className={cn(
+                      "p-3 bg-white/3 border rounded-xl space-y-1.5 text-xs transition",
+                      h.isMatch ? 'border-medical-teal/20 bg-medical-teal/5' : 'border-white/5'
+                    )}>
+                      <div className="flex justify-between items-start gap-2">
+                        <h4 className="font-bold text-white leading-tight">{h.name}</h4>
+                        <span className="text-[9px] text-slate-500 font-mono shrink-0">{h.distance}</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 leading-snug">{h.address}, {h.city}</p>
+                      
+                      <div className="flex justify-between items-center pt-1 border-t border-white/5">
+                        <span className={cn(
+                          "text-[9px] font-bold uppercase tracking-wider",
+                          h.isMatch ? 'text-medical-teal' : 'text-slate-500'
+                        )}>{h.relevance}</span>
+                        <span className="text-[9px] font-mono text-amber-400 font-bold">{h.waitTime}</span>
+                      </div>
+                    </div>
+                  ))}
+
+                  {filterCategory === 'Pharmacies' && [
+                    { name: 'Apollo Pharmacy 24/7', dist: '0.4 km', addr: 'Bandra Main Rd', status: 'Open 24/7' },
+                    { name: 'Wellness Forever Medicals', dist: '0.8 km', addr: 'Link Road Corner', status: 'Open 24/7' }
+                  ].map((p, idx) => (
+                    <div key={idx} className="p-3 bg-white/3 border border-white/5 rounded-xl space-y-1 text-xs">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-bold text-white">{p.name}</h4>
+                        <span className="text-[9px] text-slate-500 font-mono">{p.dist}</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400">{p.addr}</p>
+                      <span className="text-[9px] text-emerald-400 font-bold uppercase">{p.status}</span>
+                    </div>
+                  ))}
+
+                  {filterCategory === 'Blood Banks' && [
+                    { name: 'Red Cross Society Blood Center', dist: '1.8 km', groups: 'O+, A+, B+, AB+', stock: 'High' },
+                    { name: 'City Hospital Blood Bank', dist: '2.5 km', groups: 'All Blood Groups', stock: 'Critical Stock' }
+                  ].map((b, idx) => (
+                    <div key={idx} className="p-3 bg-white/3 border border-white/5 rounded-xl space-y-1 text-xs">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-bold text-white">{b.name}</h4>
+                        <span className="text-[9px] text-slate-500 font-mono">{b.dist}</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400">Available: {b.groups}</p>
+                      <span className="text-[9px] text-amber-400 font-bold uppercase">Stock: {b.stock}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </motion.div>

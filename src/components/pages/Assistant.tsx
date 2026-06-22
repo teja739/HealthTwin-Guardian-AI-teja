@@ -38,6 +38,7 @@ export default function Assistant({ userProfile }: AssistantProps) {
   const [input, setInput] = useState('');
   const [selectedLang, setSelectedLang] = useState('English');
   const [isTyping, setIsTyping] = useState(false);
+  const [keypadMode, setKeypadMode] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const languages = [
@@ -336,6 +337,106 @@ export default function Assistant({ userProfile }: AssistantProps) {
     }
   };
 
+  if (keypadMode) {
+    const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant');
+    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+    
+    return (
+      <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between space-y-6 min-h-[500px]">
+        {/* Header */}
+        <div className="flex justify-between items-center border-b border-white/5 pb-3">
+          <div>
+            <h3 className="text-lg font-display font-extrabold text-white flex items-center gap-1.5">
+              🎙️ Voice Assistant / గ్రామీణ సహాయకుడు / ग्रामीण सहायक
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">Simplified, high-contrast vocal assistant for rural and elderly care.</p>
+          </div>
+          <button
+            onClick={() => setKeypadMode(false)}
+            className="px-4 py-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl text-xs font-bold text-white transition"
+          >
+            Switch to Standard Chat
+          </button>
+        </div>
+
+        {/* Big Text Display Screen */}
+        <div className="flex-1 bg-slate-950 p-6 rounded-xl border border-white/5 space-y-5 overflow-y-auto">
+          {lastUserMsg && (
+            <div className="space-y-1">
+              <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono font-bold">You Said / మీరు అడిగారు:</span>
+              <p className="text-base text-slate-300 font-bold">{lastUserMsg.content}</p>
+            </div>
+          )}
+
+          <div className="space-y-2 pt-2 border-t border-white/5">
+            <span className="text-[10px] text-medical-teal uppercase tracking-widest font-mono font-bold">AI Response / సమాధానం:</span>
+            <p className="text-lg text-white font-extrabold leading-relaxed">
+              {lastAssistantMsg ? (lastAssistantMsg.translation && selectedLang !== 'English' ? lastAssistantMsg.translation : lastAssistantMsg.content) : 'Awaiting speech input...'}
+            </p>
+          </div>
+        </div>
+
+        {/* Language Selection Grid */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest font-bold">Select Language / భాష ఎంచుకోండి:</p>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { name: 'Telugu', label: 'Telugu / తెలుగు', flag: '🇮🇳' },
+              { name: 'Hindi', label: 'Hindi / हिंदी', flag: '🇮🇳' },
+              { name: 'English', label: 'English / US', flag: '🇺🇸' }
+            ].map((lang) => (
+              <button
+                key={lang.name}
+                type="button"
+                onClick={() => setSelectedLang(lang.name)}
+                className={cn(
+                  "py-4 rounded-xl border text-sm font-extrabold flex flex-col items-center justify-center gap-1.5 transition-all duration-300",
+                  selectedLang === lang.name 
+                    ? 'border-medical-blue bg-medical-blue/15 text-white shadow-lg scale-102' 
+                    : 'border-white/10 bg-white/3 text-slate-400 hover:border-white/20'
+                )}
+              >
+                <span className="text-2xl">{lang.flag}</span>
+                <span>{lang.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Large Speaking Controls */}
+        <div className="flex gap-4 items-center">
+          <button
+            onClick={toggleListening}
+            className={cn(
+              "flex-1 py-6 rounded-2xl border text-lg font-extrabold flex items-center justify-center gap-3 transition-all duration-300",
+              isListening
+                ? 'bg-rose-600 border-rose-500 text-white animate-pulse shadow-[0_0_30px_rgba(225,29,72,0.4)]'
+                : 'bg-white/5 border-white/10 hover:bg-white/10 text-medical-blue shadow-lg hover:scale-101'
+            )}
+          >
+            <Mic className="w-6 h-6" />
+            {isListening ? 'SPEAK NOW / మాట్లాడండి / बोलें' : 'TAP TO SPEAK / మాట్లాడటానికి నొక్కండి'}
+          </button>
+
+          {lastAssistantMsg && (
+            <button
+              onClick={() => speakMessage(lastAssistantMsg.id, lastAssistantMsg.translation && selectedLang !== 'English' ? lastAssistantMsg.translation : lastAssistantMsg.content, selectedLang)}
+              className={cn(
+                "p-5 rounded-2xl border transition-all duration-300",
+                speakingMsgId === lastAssistantMsg.id
+                  ? 'bg-rose-500/20 border-rose-500/30 text-rose-400'
+                  : 'bg-white/5 border-white/10 hover:bg-white/10 text-medical-teal'
+              )}
+              title="Read Aloud"
+            >
+              {speakingMsgId === lastAssistantMsg.id ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-220px)] min-h-[500px]">
       {/* Language Selector Sidebar */}
@@ -384,7 +485,20 @@ export default function Assistant({ userProfile }: AssistantProps) {
               </span>
             </div>
           </div>
-          <Sparkles className="w-4 h-4 text-medical-teal" />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setKeypadMode(!keypadMode)}
+              className={cn(
+                "px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all duration-300",
+                keypadMode 
+                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' 
+                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+              )}
+            >
+              ⌨️ {keypadMode ? 'Switch to Standard Chat' : 'Rural / Keypad Mode'}
+            </button>
+            <Sparkles className="w-4 h-4 text-medical-teal" />
+          </div>
         </div>
 
         {/* Messages */}
@@ -395,7 +509,7 @@ export default function Assistant({ userProfile }: AssistantProps) {
                 "max-w-[80%] p-3.5 rounded-2xl text-xs leading-relaxed relative group",
                 msg.role === 'user'
                   ? 'bg-medical-blue/20 border border-medical-blue/30 text-white rounded-br-sm'
-                  : 'bg-white/5 border border-white/5 text-slate-300 rounded-bl-sm'
+                  : 'bg-white/5 border-white/5 text-slate-300 rounded-bl-sm'
               )}>
                 <div className={cn(msg.role === 'assistant' && "pr-6")}>
                   <p>{msg.content}</p>

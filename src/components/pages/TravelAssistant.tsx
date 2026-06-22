@@ -5,10 +5,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plane, MapPin, Sun, ShieldCheck, 
   AlertTriangle, Phone, Search, Loader2, 
-  Activity, Star, Sparkles, Navigation, Compass 
+  Activity, Sparkles, Navigation, Compass 
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { logToSplunk } from '@/lib/splunk-client';
+
+interface TravelReport {
+  destination: string;
+  climate: string;
+  aqiAdvice: string;
+  vaccines: string[];
+  precautions: string[];
+  hospitals: Array<{
+    name: string;
+    address: string;
+    phone: string;
+  }>;
+  customTips: string[];
+}
 
 interface TravelAssistantProps {
   userProfile?: {
@@ -25,7 +37,7 @@ interface TravelAssistantProps {
 export default function TravelAssistant({ userProfile }: TravelAssistantProps) {
   const [destination, setDestination] = useState('');
   const [loading, setLoading] = useState(false);
-  const [report, setReport] = useState<any>(null);
+  const [report, setReport] = useState<TravelReport | null>(null);
 
   const presets = ['Tokyo, Japan', 'London, UK', 'New York, USA', 'Bangalore, India', 'Cairo, Egypt'];
 

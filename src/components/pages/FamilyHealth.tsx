@@ -31,6 +31,42 @@ export default function FamilyHealth({ userProfile }: FamilyHealthProps) {
   const [newMedications, setNewMedications] = useState('');
   const [saveLoading, setSaveLoading] = useState(false);
 
+  // Live Family Alerts State
+  const [alerts, setAlerts] = useState<any[]>([
+    {
+      id: '1',
+      type: 'success',
+      title: 'Water Goal Completed',
+      text: 'Ramesh Rajesh (Father) completed 2.4L daily water target.',
+      time: '1 hr ago'
+    },
+    {
+      id: '2',
+      type: 'success',
+      title: 'Medication Adherence Logged',
+      text: 'Priya Rajesh (Spouse) registered morning Lisinopril intake.',
+      time: '2 hrs ago'
+    }
+  ]);
+
+  const handleSimulateAlert = () => {
+    const newAlert = {
+      id: Date.now().toString(),
+      type: 'critical',
+      title: 'CRITICAL: Medication Missed',
+      text: 'Devika Prasad (Grandmother) MISSED Metformin dosage (due at 8:00 AM). AI alerted Priya (daughter) and Rajesh (son) via SMS.',
+      time: 'Just now'
+    };
+    setAlerts(prev => [newAlert, ...prev]);
+    alert('🚨 Emergency Simulation Triggered!\nGrandmother Devi Prasad missed her Metformin dosage. AI dispatched urgent SMS alerts to daughter Priya and son Rajesh.');
+    
+    logToSplunk('family_health', {
+      action: 'family_emergency_simulated',
+      event: 'grandmother_missed_meds',
+      contactsNotified: ['Priya', 'Rajesh']
+    }, { severity: 'Critical' });
+  };
+
   useEffect(() => {
     async function loadFamily() {
       setLoading(true);
@@ -171,6 +207,41 @@ export default function FamilyHealth({ userProfile }: FamilyHealthProps) {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Live Family Alerts Feed */}
+        <div className="glass-panel p-6 rounded-2xl space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-display font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-rose-500 animate-pulse" /> Live Family Alerts Feed
+            </h3>
+            <button
+              onClick={handleSimulateAlert}
+              className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded text-[9px] font-bold text-rose-400 transition"
+            >
+              Simulate Missed Meds
+            </button>
+          </div>
+
+          <div className="space-y-3.5 max-h-[200px] overflow-y-auto pr-1">
+            {alerts.map((a) => (
+              <div 
+                key={a.id} 
+                className={cn(
+                  "p-3 rounded-xl border text-[11px] leading-relaxed space-y-1 relative overflow-hidden transition duration-200",
+                  a.type === 'critical' 
+                    ? 'bg-rose-500/5 border-rose-500/20 text-rose-400 hover:border-rose-500/35 animate-pulse'
+                    : 'bg-white/3 border-white/5 text-slate-300 hover:border-white/12'
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold">{a.title}</span>
+                  <span className="text-[9px] text-slate-500 font-mono">{a.time}</span>
+                </div>
+                <p className="text-slate-400 leading-snug">{a.text}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
