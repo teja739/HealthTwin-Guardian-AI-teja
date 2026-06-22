@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, ArrowRight, ArrowLeft, Check, Heart, Pill, AlertTriangle, Sparkles } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Heart, Pill, AlertTriangle, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logToSplunk } from '@/lib/splunk-client';
 
@@ -71,9 +71,7 @@ export default function Onboarding({ onComplete, userName, userEmail }: Onboardi
       >
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-medical-blue to-medical-teal flex items-center justify-center">
-            <Shield className="w-4.5 h-4.5 text-white" />
-          </div>
+          <img src="/logo.png" alt="HealthTwin Logo" className="w-8 h-8 object-contain rounded-lg shrink-0" />
           <span className="font-display font-bold text-base text-white">HealthTwin Guardian AI</span>
         </div>
 

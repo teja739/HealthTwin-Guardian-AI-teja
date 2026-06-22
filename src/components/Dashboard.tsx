@@ -132,16 +132,12 @@ export default function Dashboard({ userProfile, onLogout, isOffline }: Dashboar
         <div className="flex items-center justify-between p-4 border-b border-white/5">
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-medical-blue to-medical-teal flex items-center justify-center shrink-0">
-                <Shield className="w-3.5 h-3.5 text-white" />
-              </div>
+              <img src="/logo.png" alt="HealthTwin Logo" className="w-7 h-7 object-contain shrink-0 rounded-lg" />
               <span className="font-display font-bold text-sm text-white tracking-tight">HealthTwin</span>
             </div>
           )}
           {sidebarCollapsed && (
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-medical-blue to-medical-teal flex items-center justify-center mx-auto">
-              <Shield className="w-3.5 h-3.5 text-white" />
-            </div>
+            <img src="/logo.png" alt="HealthTwin Logo" className="w-7 h-7 object-contain mx-auto rounded-lg" />
           )}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -237,9 +233,7 @@ export default function Dashboard({ userProfile, onLogout, isOffline }: Dashboar
       {/* Mobile Bottom Nav / Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-md border-b border-white/5 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-medical-blue to-medical-teal flex items-center justify-center">
-            <Shield className="w-3.5 h-3.5 text-white" />
-          </div>
+          <img src="/logo.png" alt="HealthTwin Logo" className="w-7 h-7 object-contain rounded-lg" />
           <span className="font-display font-bold text-sm text-white">{currentPageTitle}</span>
         </div>
         <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 rounded-lg bg-white/5 border border-white/10">

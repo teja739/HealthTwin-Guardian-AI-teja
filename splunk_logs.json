@@ -1,24 +1,5 @@
 [
   {
-    "time": 1781781539390,
-    "host": "browser-client",
-    "source": "healthtwin-web-client",
-    "sourcetype": "emergency_sos",
-    "index": "healthtwin",
-    "event": {
-      "action": "emergency_location_resolved",
-      "lat": 16.57036,
-      "lng": 81.97189,
-      "address": "GPS Coordinates [16.57036, 81.97189]",
-      "provider": "Browser Geolocation (Fallback Coords Only)",
-      "userEmail": "saiamruth347@gmail.com",
-      "userName": "saisrisuryaamruth damaraju",
-      "severity": "Info",
-      "_client_timestamp": "2026-06-18T11:18:59.218Z",
-      "timestamp": "2026-06-18T11:18:59.390Z"
-    }
-  },
-  {
     "time": 1781781540167,
     "host": "browser-client",
     "source": "healthtwin-web-client",
@@ -19177,6 +19158,32 @@
       "severity": "Info",
       "_client_timestamp": "2026-06-22T10:02:41.016Z",
       "timestamp": "2026-06-22T10:02:41.272Z"
+    }
+  },
+  {
+    "time": 1782125240881,
+    "host": "browser-client",
+    "source": "healthtwin-web-client",
+    "sourcetype": "security_access",
+    "index": "healthtwin",
+    "event": {
+      "action": "onboarding_completed",
+      "age": 32,
+      "weight": 72,
+      "height": 175,
+      "bloodGroup": "O+",
+      "goals": [
+        "Heart Health",
+        "Longevity"
+      ],
+      "allergiesCount": 1,
+      "medicationsCount": 6,
+      "conditionsCount": 1,
+      "userEmail": "anonymous",
+      "userName": "Anonymous",
+      "severity": "Success",
+      "_client_timestamp": "2026-06-22T10:47:20.685Z",
+      "timestamp": "2026-06-22T10:47:20.881Z"
     }
   }
 ]

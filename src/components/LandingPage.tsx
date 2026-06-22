@@ -43,9 +43,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
       {/* Navigation Bar */}
       <nav className="relative z-50 flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/5">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-medical-blue to-medical-teal flex items-center justify-center">
-            <Shield className="w-4.5 h-4.5 text-white" />
-          </div>
+          <img src="/logo.png" alt="HealthTwin Logo" className="w-8 h-8 object-contain rounded-lg shrink-0" />
           <span className="font-display font-bold text-base text-white tracking-tight">HealthTwin</span>
           <span className="text-[9px] px-1.5 py-0.5 bg-medical-blue/10 border border-medical-blue/20 text-medical-blue rounded-full font-semibold uppercase">Guardian AI</span>
         </div>
@@ -227,7 +225,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
       <footer className="relative z-10 border-t border-white/5 px-6 md:px-12 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between text-[11px] text-slate-500 gap-3">
           <div className="flex items-center gap-2">
-            <Shield className="w-3.5 h-3.5" />
+            <img src="/logo.png" alt="HealthTwin Logo" className="w-3.5 h-3.5 object-contain rounded" />
             <span>HealthTwin Guardian AI · HIPAA Compliant · AES-256 Encrypted</span>
           </div>
           <span>© 2026 HealthTwin Technologies. All rights reserved.</span>
