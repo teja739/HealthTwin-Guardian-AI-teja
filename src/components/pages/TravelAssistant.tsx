@@ -7,6 +7,7 @@ import {
   AlertTriangle, Phone, Search, Loader2, 
   Activity, Sparkles, Navigation, Compass 
 } from 'lucide-react';
+import { logToSplunk } from '@/lib/splunk-client';
 
 interface TravelReport {
   destination: string;
