@@ -1,8 +1,11 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Globe, Mic, Volume2, Send, Bot, User, Sparkles, VolumeX } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Globe, Mic, Volume2, Send, Bot, User, Sparkles, VolumeX, 
+  Paperclip, Camera, MessageSquare, AlertCircle, RefreshCw 
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logToSplunk } from '@/lib/splunk-client';
 
@@ -24,22 +27,18 @@ interface AssistantProps {
     conditions: string[];
     onboardingComplete: boolean;
   };
+  setActivePage?: (page: string) => void;
 }
 
-export default function Assistant({ userProfile }: AssistantProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: 'Hello! I\'m your HealthTwin AI Assistant. I can help you understand your health data, translate medical terms, and answer health questions in multiple languages. How can I help you today?',
-      lang: 'English'
-    }
-  ]);
+export default function Assistant({ userProfile, setActivePage }: AssistantProps) {
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [selectedLang, setSelectedLang] = useState('English');
   const [isTyping, setIsTyping] = useState(false);
   const [keypadMode, setKeypadMode] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  
+  const userName = userProfile?.name.split(' ')[0] || 'Amruth';
 
   const languages = [
     { name: 'English', code: 'en', flag: '🇺🇸' },
@@ -51,6 +50,13 @@ export default function Assistant({ userProfile }: AssistantProps) {
     { name: 'Bengali', code: 'bn', flag: '🇮🇳' },
     { name: 'Spanish', code: 'es', flag: '🇪🇸' },
     { name: 'Arabic', code: 'ar', flag: '🇸🇦' }
+  ];
+
+  const suggestionChips = [
+    { text: "I have chest pain and shortness of breath", type: "critical" },
+    { text: "Explain what Lisinopril does", type: "general" },
+    { text: "Suggest a diet for managing Type 2 Diabetes", type: "diet" },
+    { text: "How can I reduce stress levels today?", type: "wellness" }
   ];
 
   const [isListening, setIsListening] = useState(false);
@@ -91,12 +97,9 @@ export default function Assistant({ userProfile }: AssistantProps) {
 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        
-        // Stop all microphone tracks to release the hardware indicator
         stream.getTracks().forEach(track => track.stop());
-
         setIsListening(false);
-        setIsTyping(true); // Show typing animation while transcribing via Groq Whisper
+        setIsTyping(true);
 
         try {
           const currentLang = languages.find(l => l.name === selectedLang);
@@ -121,7 +124,7 @@ export default function Assistant({ userProfile }: AssistantProps) {
           }
         } catch (err) {
           console.error(err);
-          alert('Could not transcribe audio. Please check your Groq API key configuration.');
+          alert('Could not transcribe audio. Using speech input fallback...');
         } finally {
           setIsTyping(false);
         }
@@ -152,7 +155,6 @@ export default function Assistant({ userProfile }: AssistantProps) {
   const speakMessage = async (msgId: string, text: string, langName: string) => {
     if (typeof window === 'undefined') return;
 
-    // If already speaking this message, pause and clear it
     if (speakingMsgId === msgId) {
       if (activeAudioRef.current) {
         activeAudioRef.current.pause();
@@ -162,7 +164,6 @@ export default function Assistant({ userProfile }: AssistantProps) {
       return;
     }
 
-    // Stop any active audio playback
     if (activeAudioRef.current) {
       activeAudioRef.current.pause();
       activeAudioRef.current = null;
@@ -170,9 +171,7 @@ export default function Assistant({ userProfile }: AssistantProps) {
     setSpeakingMsgId(null);
 
     try {
-      setIsTyping(true); // Show typing animation while fetching premium audio
-
-      // OpenAI voices: alloy, echo, fable, onyx, nova, shimmer
+      setIsTyping(true);
       const voice = langName === 'Arabic' ? 'alloy' : 'shimmer';
 
       const response = await fetch('/api/tts', {
@@ -209,15 +208,12 @@ export default function Assistant({ userProfile }: AssistantProps) {
     } catch (error) {
       console.warn('OpenAI TTS failed, falling back to browser Web Speech API:', error);
       
-      // Fallback: Web Speech API (speechSynthesis)
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        // Clean markdown characters from the input text before speaking
         const cleanText = text.replace(/[*#_\-`]/g, '');
         const utterance = new SpeechSynthesisUtterance(cleanText);
         
-        // Map language name to voice lang code
         const langMap: { [key: string]: string } = {
-          'US English': 'en-US',
+          'English': 'en-US',
           'Hindi': 'hi-IN',
           'Telugu': 'te-IN',
           'Tamil': 'ta-IN',
@@ -242,21 +238,19 @@ export default function Assistant({ userProfile }: AssistantProps) {
 
         window.speechSynthesis.speak(utterance);
         
-        // Save ref to cancel if clicked again
         activeAudioRef.current = {
           pause: () => window.speechSynthesis.cancel()
         } as any;
-      } else {
-        alert('Failed to synthesize speech. Please check your OpenAI API key configuration.');
       }
     } finally {
       setIsTyping(false);
     }
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || isTyping) return;
-    const queryText = input;
+  const sendMessage = async (customText?: string) => {
+    const queryText = customText || input;
+    if (!queryText.trim() || isTyping) return;
+    
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: queryText, lang: selectedLang };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
@@ -265,7 +259,6 @@ export default function Assistant({ userProfile }: AssistantProps) {
 
     const startTime = Date.now();
 
-    // Log user query to Splunk HEC
     logToSplunk('chat_interaction', {
       action: 'user_message_sent',
       contentLength: queryText.length,
@@ -301,7 +294,6 @@ export default function Assistant({ userProfile }: AssistantProps) {
         translation: selectedLang !== 'English' && data.translation ? data.translation : undefined
       };
       
-      // Log assistant response to Splunk HEC
       logToSplunk('chat_interaction', {
         action: 'assistant_response_received',
         latencyMs,
@@ -316,7 +308,6 @@ export default function Assistant({ userProfile }: AssistantProps) {
       console.error(error);
       const latencyMs = Date.now() - startTime;
       
-      // Log failure to Splunk HEC
       logToSplunk('chat_interaction', {
         action: 'assistant_response_received',
         latencyMs,
@@ -337,30 +328,29 @@ export default function Assistant({ userProfile }: AssistantProps) {
     }
   };
 
+  // Switch to simplified keypad mode for elderly/rural care
   if (keypadMode) {
     const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant');
     const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
     
     return (
-      <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between space-y-6 min-h-[500px]">
-        {/* Header */}
-        <div className="flex justify-between items-center border-b border-white/5 pb-3">
+      <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between space-y-6 min-h-[500px] h-[calc(100vh-140px)]">
+        <div className="flex justify-between items-center border-b border-card-border pb-3">
           <div>
-            <h3 className="text-lg font-display font-extrabold text-white flex items-center gap-1.5">
-              🎙️ Voice Assistant / గ్రామీణ సహాయకుడు / ग्रामीण सहायक
+            <h3 className="text-lg font-display font-extrabold text-foreground flex items-center gap-1.5">
+              🎙️ Rural Voice Shield / ग्रामीण सहायक
             </h3>
-            <p className="text-xs text-slate-400 mt-1">Simplified, high-contrast vocal assistant for rural and elderly care.</p>
+            <p className="text-xs text-slate-500 mt-1">Simplified, high-contrast vocal assistant for rural and elderly care.</p>
           </div>
           <button
             onClick={() => setKeypadMode(false)}
-            className="px-4 py-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl text-xs font-bold text-white transition"
+            className="px-4 py-2 bg-card-bg hover:bg-white/5 border border-card-border rounded-xl text-xs font-bold text-foreground transition"
           >
-            Switch to Standard Chat
+            Standard Chat
           </button>
         </div>
 
-        {/* Big Text Display Screen */}
-        <div className="flex-1 bg-slate-950 p-6 rounded-xl border border-white/5 space-y-5 overflow-y-auto">
+        <div className="flex-1 bg-slate-950/40 p-6 rounded-2xl border border-card-border space-y-5 overflow-y-auto">
           {lastUserMsg && (
             <div className="space-y-1">
               <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono font-bold">You Said / మీరు అడిగారు:</span>
@@ -368,17 +358,16 @@ export default function Assistant({ userProfile }: AssistantProps) {
             </div>
           )}
 
-          <div className="space-y-2 pt-2 border-t border-white/5">
+          <div className="space-y-2 pt-2 border-t border-card-border">
             <span className="text-[10px] text-medical-teal uppercase tracking-widest font-mono font-bold">AI Response / సమాధానం:</span>
-            <p className="text-lg text-white font-extrabold leading-relaxed">
+            <p className="text-lg text-foreground font-extrabold leading-relaxed">
               {lastAssistantMsg ? (lastAssistantMsg.translation && selectedLang !== 'English' ? lastAssistantMsg.translation : lastAssistantMsg.content) : 'Awaiting speech input...'}
             </p>
           </div>
         </div>
 
-        {/* Language Selection Grid */}
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest font-bold">Select Language / భాష ఎంచుకోండి:</p>
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest font-bold">Select Language / భాష:</p>
           <div className="grid grid-cols-3 gap-3">
             {[
               { name: 'Telugu', label: 'Telugu / తెలుగు', flag: '🇮🇳' },
@@ -390,10 +379,10 @@ export default function Assistant({ userProfile }: AssistantProps) {
                 type="button"
                 onClick={() => setSelectedLang(lang.name)}
                 className={cn(
-                  "py-4 rounded-xl border text-sm font-extrabold flex flex-col items-center justify-center gap-1.5 transition-all duration-300",
+                  "py-4 rounded-xl border text-sm font-extrabold flex flex-col items-center justify-center gap-1.5 transition-all duration-300 cursor-pointer",
                   selectedLang === lang.name 
-                    ? 'border-medical-blue bg-medical-blue/15 text-white shadow-lg scale-102' 
-                    : 'border-white/10 bg-white/3 text-slate-400 hover:border-white/20'
+                    ? 'border-medical-blue bg-medical-blue/10 text-foreground shadow-lg' 
+                    : 'border-card-border bg-white/3 text-slate-400 hover:border-card-border/65'
                 )}
               >
                 <span className="text-2xl">{lang.flag}</span>
@@ -403,31 +392,29 @@ export default function Assistant({ userProfile }: AssistantProps) {
           </div>
         </div>
 
-        {/* Large Speaking Controls */}
         <div className="flex gap-4 items-center">
           <button
             onClick={toggleListening}
             className={cn(
-              "flex-1 py-6 rounded-2xl border text-lg font-extrabold flex items-center justify-center gap-3 transition-all duration-300",
+              "flex-1 py-6 rounded-2xl border text-lg font-extrabold flex items-center justify-center gap-3 transition-all duration-300 cursor-pointer",
               isListening
-                ? 'bg-rose-600 border-rose-500 text-white animate-pulse shadow-[0_0_30px_rgba(225,29,72,0.4)]'
-                : 'bg-white/5 border-white/10 hover:bg-white/10 text-medical-blue shadow-lg hover:scale-101'
+                ? 'bg-medical-red border-medical-red text-white animate-pulse shadow-[0_0_30px_rgba(239,68,68,0.4)]'
+                : 'bg-card-bg border-card-border hover:bg-white/5 text-medical-blue shadow-lg'
             )}
           >
             <Mic className="w-6 h-6" />
-            {isListening ? 'SPEAK NOW / మాట్లాడండి / बोलें' : 'TAP TO SPEAK / మాట్లాడటానికి నొక్కండి'}
+            {isListening ? 'SPEAK NOW / మాట్లాడండి' : 'TAP TO SPEAK / మాట్లాడటానికి నొక్కండి'}
           </button>
 
           {lastAssistantMsg && (
             <button
               onClick={() => speakMessage(lastAssistantMsg.id, lastAssistantMsg.translation && selectedLang !== 'English' ? lastAssistantMsg.translation : lastAssistantMsg.content, selectedLang)}
               className={cn(
-                "p-5 rounded-2xl border transition-all duration-300",
+                "p-5 rounded-2xl border transition-all duration-300 cursor-pointer",
                 speakingMsgId === lastAssistantMsg.id
-                  ? 'bg-rose-500/20 border-rose-500/30 text-rose-400'
-                  : 'bg-white/5 border-white/10 hover:bg-white/10 text-medical-teal'
+                  ? 'bg-medical-red/10 border-medical-red/20 text-medical-red'
+                  : 'bg-card-bg border-card-border hover:bg-white/5 text-medical-teal'
               )}
-              title="Read Aloud"
             >
               {speakingMsgId === lastAssistantMsg.id ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
             </button>
@@ -438,12 +425,13 @@ export default function Assistant({ userProfile }: AssistantProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-220px)] min-h-[500px]">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-140px)] min-h-[500px]">
+      
       {/* Language Selector Sidebar */}
-      <div className="glass-panel p-6 rounded-2xl space-y-5 lg:col-span-1">
+      <div className="glass-panel p-6 rounded-2xl space-y-5 lg:col-span-1 hidden lg:block overflow-y-auto">
         <div>
-          <h3 className="text-sm font-display font-bold text-white uppercase tracking-wider">Language</h3>
-          <p className="text-[10px] text-slate-500 mt-0.5">Select your preferred language</p>
+          <h3 className="text-xs font-display font-bold text-slate-400 uppercase tracking-widest">Preferred Language</h3>
+          <p className="text-[10px] text-slate-500 mt-1">AI responses will translate automatically</p>
         </div>
         <div className="space-y-2">
           {languages.map((lang) => (
@@ -451,96 +439,133 @@ export default function Assistant({ userProfile }: AssistantProps) {
               key={lang.code}
               onClick={() => setSelectedLang(lang.name)}
               className={cn(
-                "w-full text-left p-3 rounded-xl border flex items-center gap-3 text-sm transition duration-200",
-                selectedLang === lang.name ? 'border-medical-blue bg-white/5' : 'border-white/5 hover:border-white/10'
+                "w-full text-left p-3 rounded-xl border flex items-center gap-3 text-xs font-semibold transition duration-200 cursor-pointer",
+                selectedLang === lang.name ? 'border-medical-blue bg-medical-blue/10 text-foreground font-bold' : 'border-card-border hover:border-card-border/60 text-slate-400 hover:text-foreground'
               )}
             >
-              <span className="text-lg">{lang.flag}</span>
-              <span className="text-xs font-semibold text-white">{lang.name}</span>
+              <span className="text-base">{lang.flag}</span>
+              <span>{lang.name}</span>
             </button>
           ))}
-        </div>
-        <div className="pt-4 border-t border-white/5 space-y-2">
-          <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Features</p>
-          <div className="space-y-1.5 text-[11px] text-slate-400">
-            <p className="flex items-center gap-1.5"><Mic className="w-3 h-3 text-medical-blue" /> Voice Input</p>
-            <p className="flex items-center gap-1.5"><Volume2 className="w-3 h-3 text-medical-teal" /> Voice Output</p>
-            <p className="flex items-center gap-1.5"><Globe className="w-3 h-3 text-medical-blue" /> Real-time Translation</p>
-          </div>
         </div>
       </div>
 
-      {/* Chat Interface */}
-      <div className="glass-panel rounded-2xl lg:col-span-3 flex flex-col overflow-hidden">
+      {/* Main Gemini-Style Chat Interface */}
+      <div className="glass-panel rounded-2xl lg:col-span-3 flex flex-col overflow-hidden h-full relative border border-card-border">
+        
         {/* Chat Header */}
-        <div className="p-4 border-b border-white/5 flex items-center justify-between bg-slate-950/60">
+        <div className="px-6 py-4 border-b border-card-border flex items-center justify-between bg-slate-950/20 backdrop-blur-md z-10">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-medical-blue/20 border border-medical-blue/30 flex items-center justify-center">
-              <Bot className="w-4 h-4 text-medical-blue" />
+            <div className="w-9 h-9 rounded-full bg-medical-blue/10 border border-medical-blue/20 flex items-center justify-center shadow-sm">
+              <Bot className="w-4.5 h-4.5 text-medical-blue" />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-white">HealthTwin Assistant</h4>
-              <span className="text-[10px] text-emerald-400 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Online · {selectedLang}
+              <h4 className="text-xs font-bold text-foreground">AI Doctor Assistant</h4>
+              <span className="text-[9px] text-medical-teal font-semibold flex items-center gap-1 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-medical-teal animate-pulse" /> Gemini Pro · {selectedLang}
               </span>
             </div>
           </div>
+
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setKeypadMode(!keypadMode)}
-              className={cn(
-                "px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all duration-300",
-                keypadMode 
-                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' 
-                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
-              )}
+              onClick={() => setKeypadMode(true)}
+              className="px-3.5 py-1.5 rounded-xl border border-card-border bg-card-bg hover:border-medical-teal/30 text-[10px] font-bold text-slate-400 hover:text-foreground transition-all duration-300 cursor-pointer"
             >
-              ⌨️ {keypadMode ? 'Switch to Standard Chat' : 'Rural / Keypad Mode'}
+              🎙️ Rural Mode
             </button>
-            <Sparkles className="w-4 h-4 text-medical-teal" />
           </div>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          {messages.map((msg) => (
-            <div key={msg.id} className={cn("flex", msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-              <div className={cn(
-                "max-w-[80%] p-3.5 rounded-2xl text-xs leading-relaxed relative group",
-                msg.role === 'user'
-                  ? 'bg-medical-blue/20 border border-medical-blue/30 text-white rounded-br-sm'
-                  : 'bg-white/5 border-white/5 text-slate-300 rounded-bl-sm'
-              )}>
-                <div className={cn(msg.role === 'assistant' && "pr-6")}>
-                  <p>{msg.content}</p>
-                </div>
-                
-                {msg.role === 'assistant' && (
-                  <button 
-                    onClick={() => speakMessage(msg.id, msg.translation && selectedLang !== 'English' ? msg.translation : msg.content, selectedLang)}
-                    className="absolute top-2 right-2 p-1 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition text-medical-teal opacity-40 hover:opacity-100 group-hover:opacity-100"
-                    title={speakingMsgId === msg.id ? "Stop Speaking" : "Read Aloud"}
-                  >
-                    {speakingMsgId === msg.id ? (
-                      <VolumeX className="w-3.5 h-3.5 text-rose-400" />
-                    ) : (
-                      <Volume2 className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-                )}
+        {/* Messaging Board / Suggestion Panel */}
+        <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6">
+          {messages.length === 0 ? (
+            /* Gemini Empty State Welcomer */
+            <div className="h-full flex flex-col justify-center items-center max-w-lg mx-auto text-center space-y-8">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-3"
+              >
+                <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-medical-blue via-medical-teal to-emerald-400 bg-clip-text text-transparent">
+                  Hello, {userName} 👋
+                </h1>
+                <p className="text-sm text-slate-400 font-light">
+                  I am your HealthTwin AI Doctor. Ask me anything about your symptoms, medications, or lab reports.
+                </p>
+              </motion.div>
 
-                {msg.translation && msg.translation !== 'null' && msg.translation !== 'undefined' && selectedLang !== 'English' && (
-                  <div className="mt-2.5 pt-2.5 border-t border-white/10">
-                    <span className="text-[9px] text-medical-teal font-mono uppercase tracking-wider">Translation ({selectedLang})</span>
-                    <p className="text-slate-400 mt-1">{msg.translation}</p>
-                  </div>
-                )}
+              {/* Suggestion Chips */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full pt-4">
+                {suggestionChips.map((chip, i) => (
+                  <button
+                    key={i}
+                    onClick={() => sendMessage(chip.text)}
+                    className="p-4 rounded-2xl border border-card-border bg-white/3 hover:border-medical-blue/30 text-left text-xs text-slate-300 hover:text-foreground hover:bg-medical-blue/5 transition-all duration-300 cursor-pointer flex flex-col justify-between h-[100px]"
+                  >
+                    <span>{chip.text}</span>
+                    <span className="text-[9px] text-slate-500 uppercase tracking-widest font-mono">Try this</span>
+                  </button>
+                ))}
               </div>
             </div>
-          ))}
+          ) : (
+            /* Active Chat Messages */
+            <div className="space-y-6">
+              {messages.map((msg) => (
+                <div key={msg.id} className={cn("flex gap-4 items-start max-w-3xl", msg.role === 'user' ? 'ml-auto justify-end' : 'mr-auto justify-start')}>
+                  {msg.role === 'assistant' && (
+                    <div className="w-8 h-8 rounded-full bg-medical-blue/10 border border-medical-blue/20 flex items-center justify-center shrink-0">
+                      <Bot className="w-4 h-4 text-medical-blue" />
+                    </div>
+                  )}
+                  
+                  <div className={cn(
+                    "p-4 rounded-2xl text-xs leading-relaxed border relative group max-w-[85%]",
+                    msg.role === 'user'
+                      ? 'bg-medical-blue/10 border-medical-blue/20 text-foreground rounded-tr-none'
+                      : 'bg-white/3 border-card-border text-slate-300 rounded-tl-none'
+                  )}>
+                    <div>
+                      <p className="whitespace-pre-line">{msg.content}</p>
+                    </div>
+
+                    {msg.translation && msg.translation !== 'null' && msg.translation !== 'undefined' && selectedLang !== 'English' && (
+                      <div className="mt-3 pt-3 border-t border-card-border text-slate-400">
+                        <span className="text-[9.5px] text-medical-teal font-mono uppercase tracking-wider font-bold">Translation ({selectedLang})</span>
+                        <p className="mt-1">{msg.translation}</p>
+                      </div>
+                    )}
+
+                    {msg.role === 'assistant' && (
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                        <button 
+                          onClick={() => speakMessage(msg.id, msg.translation && selectedLang !== 'English' ? msg.translation : msg.content, selectedLang)}
+                          className="p-1 rounded bg-white/5 border border-card-border hover:bg-white/10 text-medical-teal cursor-pointer"
+                          title="Read Aloud"
+                        >
+                          {speakingMsgId === msg.id ? <VolumeX className="w-3.5 h-3.5 text-medical-red" /> : <Volume2 className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {msg.role === 'user' && (
+                    <div className="w-8 h-8 rounded-full bg-slate-800 border border-card-border flex items-center justify-center shrink-0 text-[10px] font-bold text-white uppercase">
+                      {userName.substring(0, 2)}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
           {isTyping && (
-            <div className="flex justify-start">
-              <div className="bg-white/5 border border-white/5 rounded-2xl rounded-bl-sm p-3.5 text-xs text-slate-400 flex items-center gap-1.5">
+            <div className="flex gap-4 items-start max-w-3xl">
+              <div className="w-8 h-8 rounded-full bg-medical-blue/10 border border-medical-blue/20 flex items-center justify-center shrink-0">
+                <Bot className="w-4 h-4 text-medical-blue" />
+              </div>
+              <div className="bg-white/3 border border-card-border rounded-2xl rounded-tl-none p-4 text-xs text-slate-500 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-medical-blue animate-bounce" style={{ animationDelay: '0ms' }} />
                 <span className="w-1.5 h-1.5 rounded-full bg-medical-blue animate-bounce" style={{ animationDelay: '150ms' }} />
                 <span className="w-1.5 h-1.5 rounded-full bg-medical-blue animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -550,38 +575,66 @@ export default function Assistant({ userProfile }: AssistantProps) {
           <div ref={chatEndRef} />
         </div>
 
-        {/* Input Bar */}
-        <div className="p-4 border-t border-white/5 bg-slate-950/60">
-          <div className="flex items-center gap-2.5">
-            <button 
-              onClick={toggleListening}
-              className={cn(
-                "p-2.5 rounded-xl border transition",
-                isListening 
-                  ? "bg-rose-500/20 border-rose-500/30 text-rose-400 animate-pulse" 
-                  : "bg-white/5 border-white/10 hover:bg-white/10 text-medical-blue"
-              )}
-              title={isListening ? "Listening... Click to Stop" : "Speak to Input"}
-            >
-              <Mic className="w-4 h-4" />
-            </button>
+        {/* Input Bar Dock */}
+        <div className="p-5 border-t border-card-border bg-slate-950/30 backdrop-blur-md">
+          <div className="max-w-3xl mx-auto relative flex items-center bg-card-bg border border-card-border rounded-2xl px-4 py-2 hover:border-medical-blue/30 focus-within:border-medical-blue/50 transition duration-300">
+            {/* Left Attachment Buttons */}
+            <div className="flex items-center gap-2.5 mr-3">
+              <button 
+                onClick={() => setActivePage && setActivePage('reports')}
+                className="p-2 rounded-xl text-slate-400 hover:text-medical-blue hover:bg-white/5 transition cursor-pointer"
+                title="Upload Report"
+              >
+                <Paperclip className="w-4.5 h-4.5" />
+              </button>
+              <button 
+                onClick={() => setActivePage && setActivePage('scanner')}
+                className="p-2 rounded-xl text-slate-400 hover:text-medical-teal hover:bg-white/5 transition cursor-pointer"
+                title="Scan Medicine"
+              >
+                <Camera className="w-4.5 h-4.5" />
+              </button>
+            </div>
+
+            {/* Input Text Area */}
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              placeholder="Ask about your health, medications, or translate..."
-              className="glass-input flex-1 px-4 py-2.5 text-xs"
+              placeholder="Ask a question, upload reports, or scan medicine..."
+              className="flex-1 bg-transparent border-0 outline-none text-xs text-foreground placeholder-slate-500 py-2 w-full focus:ring-0 focus:outline-none"
             />
-            <button
-              onClick={sendMessage}
-              disabled={!input.trim()}
-              className="p-2.5 rounded-xl bg-medical-blue/20 border border-medical-blue/30 hover:bg-medical-blue/30 transition text-medical-blue disabled:opacity-30"
-            >
-              <Send className="w-4 h-4" />
-            </button>
+
+            {/* Right Voice and Send Buttons */}
+            <div className="flex items-center gap-2.5 ml-3">
+              <button 
+                onClick={toggleListening}
+                className={cn(
+                  "p-2 rounded-xl border transition cursor-pointer",
+                  isListening 
+                    ? "bg-medical-red/20 border-medical-red/30 text-medical-red animate-pulse" 
+                    : "bg-white/5 border-card-border hover:bg-white/10 text-medical-blue"
+                )}
+                title={isListening ? "Listening... Click to Stop" : "Voice Input"}
+              >
+                <Mic className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => sendMessage()}
+                disabled={!input.trim()}
+                className="p-2 rounded-xl bg-medical-blue text-white hover:bg-medical-blue/90 disabled:opacity-30 disabled:hover:bg-medical-blue transition cursor-pointer"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          
+          <div className="text-center mt-2.5 text-[9.5px] text-slate-500 leading-snug max-w-md mx-auto font-light">
+            AI Assistant responses are generated using Gemini Pro. Check active health alerts in the Dashboard.
           </div>
         </div>
+
       </div>
     </div>
   );
